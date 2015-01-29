@@ -34,8 +34,8 @@
 // expensive than static vertices. These are in gfxEnums because they should be
 // consistant across all APIs/platforms so that the dynamic buffer performance
 // and behavior is also consistant. -patw
-#define MAX_DYNAMIC_VERTS   (8192*2)
-#define MAX_DYNAMIC_INDICES (8192*4)
+#define MAX_DYNAMIC_VERTS   (16384*2)	//ESAL we upped this
+#define MAX_DYNAMIC_INDICES (16384*4)	//ESAL we upped this
 
 enum GFXBufferType
 {
