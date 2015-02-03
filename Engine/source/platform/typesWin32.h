@@ -64,6 +64,7 @@ typedef signed _int64      S64;     ///< Compiler independent Signed 64-bit inte
 typedef unsigned _int64    U64;     ///< Compiler independent Unsigned 64-bit integer
 #pragma warning(disable: 4291) // disable warning caused by memory layer...
 #pragma warning(disable: 4996) // turn off "deprecation" warnings
+#pragma warning(disable: 4481) // turn off overide warnings
 
 #else
 typedef signed long long   S64;     ///< Compiler independent Signed 64-bit integer
