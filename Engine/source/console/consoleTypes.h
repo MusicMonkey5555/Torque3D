@@ -71,6 +71,8 @@ DefineConsoleType( TypeS32, S32 )
 DefineConsoleType( TypeS32Vector, Vector<S32> )
 DefineConsoleType( TypeF32, F32 )
 DefineConsoleType( TypeF32Vector, Vector<F32> )
+DefineConsoleType( TypeF64, F64 )
+//DefineConsoleType( TypeF64Vector, Vector<F64> )
 DefineUnmappedConsoleType( TypeString, const char * ) // plain UTF-8 strings are not supported in new interop
 DefineConsoleType( TypeCaseString, const char * )
 DefineConsoleType( TypeRealString, String )

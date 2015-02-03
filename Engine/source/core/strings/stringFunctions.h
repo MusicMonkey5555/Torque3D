@@ -155,6 +155,10 @@ inline F32 dAtof(const char *str)
    return strtof(str, NULL);
 }
 
+inline F64 dAtod(const char *str)
+{
+   return strtod(str, NULL);
+}
 
 inline char dToupper(const char c)
 {

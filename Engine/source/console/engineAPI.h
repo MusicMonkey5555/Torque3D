@@ -244,6 +244,20 @@ struct EngineUnmarshallData< F32 >
       return dAtof( str );
    }
 };
+
+template<>
+struct EngineUnmarshallData< F64 >
+{
+   F64 operator()( ConsoleValueRef &ref ) const
+   {
+      return (F64)ref;
+   }
+
+   F64 operator()( const char* str ) const
+   {
+      return dAtod( str );
+   }
+};
 template<>
 struct EngineUnmarshallData< U8 >
 {

@@ -56,6 +56,14 @@ IMPLEMENT_STRUCT( Point2F,
       FIELD( y, y, 1, "Y coordinate." )
 
 END_IMPLEMENT_STRUCT;
+IMPLEMENT_STRUCT( Point2D,
+   Point2D, MathTypes,
+   "" )
+
+      FIELD( x, x, 1, "X coordinate." )
+      FIELD( y, y, 1, "Y coordinate." )
+
+END_IMPLEMENT_STRUCT;
 IMPLEMENT_STRUCT( Point3I,
    Point3I, MathTypes,
    "" )
@@ -74,8 +82,27 @@ IMPLEMENT_STRUCT( Point3F,
       FIELD( z, z, 1, "Z coordinate." )
 
 END_IMPLEMENT_STRUCT;
+IMPLEMENT_STRUCT( Point3D,
+   Point3D, MathTypes,
+   "" )
+
+      FIELD( x, x, 1, "X coordinate." )
+      FIELD( y, y, 1, "Y coordinate." )
+      FIELD( z, z, 1, "Z coordinate." )
+
+END_IMPLEMENT_STRUCT;
 IMPLEMENT_STRUCT( Point4F,
    Point4F, MathTypes,
+   "" )
+   
+      FIELD( x, x, 1, "X coordinate." )
+      FIELD( y, y, 1, "Y coordinate." )
+      FIELD( z, z, 1, "Z coordinate." )
+      FIELD( w, w, 1, "W coordinate." )
+      
+END_IMPLEMENT_STRUCT;
+IMPLEMENT_STRUCT( Point4D,
+   Point4D, MathTypes,
    "" )
    
       FIELD( x, x, 1, "X coordinate." )
@@ -92,12 +119,24 @@ IMPLEMENT_STRUCT( RectF,
    RectF, MathTypes,
    "" )
 END_IMPLEMENT_STRUCT;
+IMPLEMENT_STRUCT( RectD,
+   RectD, MathTypes,
+   "" )
+END_IMPLEMENT_STRUCT;
 IMPLEMENT_STRUCT( MatrixF,
    MatrixF, MathTypes,
    "" )
 END_IMPLEMENT_STRUCT;
+IMPLEMENT_STRUCT( MatrixD,
+   MatrixD, MathTypes,
+   "" )
+END_IMPLEMENT_STRUCT;
 IMPLEMENT_STRUCT( AngAxisF,
    AngAxisF, MathTypes,
+   "" )
+END_IMPLEMENT_STRUCT;
+IMPLEMENT_STRUCT( AngAxisD,
+   AngAxisD, MathTypes,
    "" )
 END_IMPLEMENT_STRUCT;
 IMPLEMENT_STRUCT( TransformF,
@@ -106,6 +145,10 @@ IMPLEMENT_STRUCT( TransformF,
 END_IMPLEMENT_STRUCT;
 IMPLEMENT_STRUCT( Box3F,
    Box3F, MathTypes,
+   "" )
+END_IMPLEMENT_STRUCT;
+IMPLEMENT_STRUCT( Box3D,
+   Box3D, MathTypes,
    "" )
 END_IMPLEMENT_STRUCT;
 IMPLEMENT_STRUCT( EaseF,
@@ -165,6 +208,31 @@ ConsoleSetType( TypePoint2F )
 }
 
 //-----------------------------------------------------------------------------
+// TypePoint2D
+//-----------------------------------------------------------------------------
+ConsoleType( Point2D, TypePoint2D, Point2D )
+ImplementConsoleTypeCasters( TypePoint2D, Point2D )
+
+ConsoleGetType( TypePoint2D )
+{
+   Point2D *pt = (Point2D *) dptr;
+   static const U32 bufSize = 256;
+   char* returnBuffer = Con::getReturnBuffer(bufSize);
+   dSprintf(returnBuffer, bufSize, "%.16g %.16g", pt->x, pt->y);
+   return returnBuffer;
+}
+
+ConsoleSetType( TypePoint2D )
+{
+   if(argc == 1)
+      dSscanf(argv[0], "%lg %lg", &((Point2D *) dptr)->x, &((Point2D *) dptr)->y);
+   else if(argc == 2)
+      *((Point2D *) dptr) = Point2D(dAtod(argv[0]), dAtod(argv[1]));
+   else
+      Con::printf("Point2D must be set as { x, y } or \"x y\"");
+}
+
+//-----------------------------------------------------------------------------
 // TypePoint3I
 //-----------------------------------------------------------------------------
 ConsoleType( Point3I, TypePoint3I, Point3I )
@@ -215,6 +283,31 @@ ConsoleSetType( TypePoint3F )
 }
 
 //-----------------------------------------------------------------------------
+// TypePoint3D
+//-----------------------------------------------------------------------------
+ConsoleType( Point3D, TypePoint3D, Point3D )
+ImplementConsoleTypeCasters(TypePoint3D, Point3D)
+
+ConsoleGetType( TypePoint3D )
+{
+   Point3D *pt = (Point3D *) dptr;
+   static const U32 bufSize = 512;
+   char* returnBuffer = Con::getReturnBuffer(bufSize);
+   dSprintf(returnBuffer, bufSize, "%.16g %.16g %.16g", pt->x, pt->y, pt->z);
+   return returnBuffer;
+}
+
+ConsoleSetType( TypePoint3D )
+{
+   if(argc == 1)
+      dSscanf(argv[0], "%lg %lg %lg", &((Point3D *) dptr)->x, &((Point3D *) dptr)->y, &((Point3D *) dptr)->z);
+   else if(argc == 3)
+      *((Point3D *) dptr) = Point3D(dAtod(argv[0]), dAtod(argv[1]), dAtod(argv[2]));
+   else
+      Con::printf("Point3D must be set as { x, y, z } or \"x y z\"");
+}
+
+//-----------------------------------------------------------------------------
 // TypePoint4F
 //-----------------------------------------------------------------------------
 ConsoleType( Point4F, TypePoint4F, Point4F )
@@ -237,6 +330,31 @@ ConsoleSetType( TypePoint4F )
       *((Point4F *) dptr) = Point4F(dAtof(argv[0]), dAtof(argv[1]), dAtof(argv[2]), dAtof(argv[3]));
    else
       Con::printf("Point4F must be set as { x, y, z, w } or \"x y z w\"");
+}
+
+//-----------------------------------------------------------------------------
+// TypePoint4D
+//-----------------------------------------------------------------------------
+ConsoleType( Point4D, TypePoint4D, Point4D )
+ImplementConsoleTypeCasters( TypePoint4D, Point4D )
+
+ConsoleGetType( TypePoint4D )
+{
+   Point4D *pt = (Point4D *) dptr;
+   static const U32 bufSize = 512;
+   char* returnBuffer = Con::getReturnBuffer(bufSize);
+   dSprintf(returnBuffer, bufSize, "%.16g %.16g %.16g %.16g", pt->x, pt->y, pt->z, pt->w);
+   return returnBuffer;
+}
+
+ConsoleSetType( TypePoint4D )
+{
+   if(argc == 1)
+      dSscanf(argv[0], "%lg %lg %lg %lg", &((Point4D *) dptr)->x, &((Point4D *) dptr)->y, &((Point4D *) dptr)->z, &((Point4D *) dptr)->w);
+   else if(argc == 4)
+      *((Point4D *) dptr) = Point4D(dAtod(argv[0]), dAtod(argv[1]), dAtod(argv[2]), dAtod(argv[3]));
+   else
+      Con::printf("Point4D must be set as { x, y, z, w } or \"x y z w\"");
 }
 
 //-----------------------------------------------------------------------------
@@ -294,6 +412,33 @@ ConsoleSetType( TypeRectF )
 }
 
 //-----------------------------------------------------------------------------
+// TypeRectD
+//-----------------------------------------------------------------------------
+ConsoleType( RectD, TypeRectD, RectD )
+ImplementConsoleTypeCasters( TypeRectD, RectD )
+
+ConsoleGetType( TypeRectD )
+{
+   RectD *rect = (RectD *) dptr;
+   static const U32 bufSize = 512;
+   char* returnBuffer = Con::getReturnBuffer(bufSize);
+   dSprintf(returnBuffer, bufSize, "%.16g %.16g %.16g %.16g", rect->point.x, rect->point.y,
+            rect->extent.x, rect->extent.y);
+   return returnBuffer;
+}
+
+ConsoleSetType( TypeRectD )
+{
+   if(argc == 1)
+      dSscanf(argv[0], "%lg %lg %lg %lg", &((RectD *) dptr)->point.x, &((RectD *) dptr)->point.y,
+              &((RectD *) dptr)->extent.x, &((RectD *) dptr)->extent.y);
+   else if(argc == 4)
+      *((RectD *) dptr) = RectD(dAtod(argv[0]), dAtod(argv[1]), dAtod(argv[2]), dAtod(argv[3]));
+   else
+      Con::printf("RectD must be set as { x, y, w, h } or \"x y w h\"");
+}
+
+//-----------------------------------------------------------------------------
 // TypeMatrix
 //-----------------------------------------------------------------------------
 ConsoleType( MatrixF, TypeMatrixF, MatrixF )
@@ -330,6 +475,49 @@ ConsoleSetType( TypeMatrixF )
             &col0.x, &col0.y, &col0.z, &col1.x, &col1.y, &col1.z, &col2.x, &col2.y, &col2.z );
 
    MatrixF* mat = ( MatrixF* ) dptr;
+   
+   mat->setColumn( 0, col0 );
+   mat->setColumn( 1, col1 );
+   mat->setColumn( 2, col2 );
+}
+
+//-----------------------------------------------------------------------------
+// TypeMatrix
+//-----------------------------------------------------------------------------
+ConsoleType( MatrixD, TypeMatrixD, MatrixD )
+ImplementConsoleTypeCasters( TypeMatrixD, MatrixD )
+
+// Oh merry confusion.  Torque stores matrices in row-major order yet to TorqueScript
+// matrices were passed in column-major order, so we need to stick to this here.
+
+ConsoleGetType( TypeMatrixD )
+{
+   MatrixD* mat = ( MatrixD* ) dptr;
+
+   Point3D col0, col1, col2;
+   mat->getColumn(0, &col0);
+   mat->getColumn(1, &col1);
+   mat->getColumn(2, &col2);
+   static const U32 bufSize = 512;
+   char* returnBuffer = Con::getReturnBuffer(bufSize);
+   dSprintf(returnBuffer,bufSize,"%.16g %.16g %.16g %.16g %.16g %.16g %.16g %.16g %.16g",
+            col0.x, col0.y, col0.z, col1.x, col1.y, col1.z, col2.x, col2.y, col2.z);
+   return returnBuffer;
+}
+
+ConsoleSetType( TypeMatrixD )
+{
+   if( argc != 1 )
+   {
+      Con::errorf( "MatrixD must be set as \"c0x c0y c0z c1x c1y c1z c2x c2y c2z\"" );
+      return;
+   }
+   
+   Point3F col0, col1, col2;
+   dSscanf( argv[ 0 ], "%lg %lg %lg %lg %lg %lg %lg %lg %lg",
+            &col0.x, &col0.y, &col0.z, &col1.x, &col1.y, &col1.z, &col2.x, &col2.y, &col2.z );
+
+   MatrixD* mat = ( MatrixD* ) dptr;
    
    mat->setColumn( 0, col0 );
    mat->setColumn( 1, col1 );
@@ -451,6 +639,40 @@ ConsoleSetType( TypeAngAxisF )
       Con::printf("AngAxisF must be set as { x, y, z, angle } or \"x y z angle\"");
 }
 
+//-----------------------------------------------------------------------------
+// TypeAngAxisD
+//-----------------------------------------------------------------------------
+ConsoleType( AngAxisD, TypeAngAxisD, AngAxisD )
+ImplementConsoleTypeCasters( TypeAngAxisD, AngAxisD )
+
+ConsoleGetType( TypeAngAxisD )
+{
+   AngAxisD* aa = ( AngAxisD* ) dptr;
+   static const U32 bufSize = 512;
+   char* returnBuffer = Con::getReturnBuffer(bufSize);
+   dSprintf(returnBuffer,bufSize,"%.16g %.16g %.16g %.16g",aa->axis.x,aa->axis.y,aa->axis.z,mRadToDeg(aa->angle));
+   return returnBuffer;
+}
+
+ConsoleSetType( TypeAngAxisD )
+{
+   // DMM: Note that this will ONLY SET the ULeft 3x3 submatrix.
+   //
+   AngAxisD* aa = ( AngAxisD* ) dptr;
+   if (argc == 1)
+   {
+      dSscanf(argv[0], "%lg %lg %lg %lg", &aa->axis.x, &aa->axis.y, &aa->axis.z, &aa->angle);
+      aa->angle = mDegToRad(aa->angle);
+   }
+   else if (argc == 4) 
+   {
+      for (S32 i = 0; i < argc; i++)
+         ((F32*)&aa)[i] = dAtod(argv[i]);
+      aa->angle = mDegToRad(aa->angle);
+   }
+   else
+      Con::printf("AngAxisD must be set as { x, y, z, angle } or \"x y z angle\"");
+}
 
 //-----------------------------------------------------------------------------
 // TypeTransformF
@@ -532,6 +754,42 @@ ConsoleSetType( TypeBox3F )
    else 
    {
       Con::printf("Box3F must be set as \"xMin yMin zMin xMax yMax zMax\"");
+   }
+}
+
+//-----------------------------------------------------------------------------
+// TypeBox3D
+//-----------------------------------------------------------------------------
+ConsoleType( Box3D, TypeBox3D, Box3D )
+ImplementConsoleTypeCasters( TypeBox3D, Box3D )
+
+ConsoleGetType( TypeBox3D )
+{
+   const Box3D* pBox = (const Box3D*)dptr;
+   
+   static const U32 bufSize = 512;
+   char* returnBuffer = Con::getReturnBuffer(bufSize);
+   dSprintf(returnBuffer, bufSize, "%.16g %.16g %.16g %.16g %.16g %.16g",
+            pBox->minExtents.x, pBox->minExtents.y, pBox->minExtents.z,
+            pBox->maxExtents.x, pBox->maxExtents.y, pBox->maxExtents.z);
+
+   return returnBuffer;
+}
+
+ConsoleSetType( TypeBox3D )
+{
+   Box3D* pDst = (Box3D*)dptr;
+
+   if (argc == 1) 
+   {
+      U32 args = dSscanf(argv[0], "%lg %lg %lg %lg %lg %lg",
+                         &pDst->minExtents.x, &pDst->minExtents.y, &pDst->minExtents.z,
+                         &pDst->maxExtents.x, &pDst->maxExtents.y, &pDst->maxExtents.z);
+      AssertWarn(args == 6, "Warning, box probably not read properly");
+   } 
+   else 
+   {
+      Con::printf("Box3D must be set as \"xMin yMin zMin xMax yMax zMax\"");
    }
 }
 
@@ -913,6 +1171,162 @@ DefineConsoleFunction( MatrixCreateFromEuler, TransformF, ( Point3F angles ),,
    aa.set(rotQ);
 
    return TransformF( Point3F::Zero, aa );
+}
+
+DefineConsoleFunction( EulerToAngleAxisD, AngAxisD, ( EulerD angle ),,
+   "Converts a Euler rotation to angle axis rotation (in degrees).\n\n"
+   "@param angle Angle in degrees to convert.\n"
+   "@return Euler rotation/angle converted to angle axis form.\n")
+{
+	EulerD rot(angle);
+
+	//convert to radians
+	rot.x = mDegToRad(rot.x);
+	rot.y = mDegToRad(rot.y);
+	rot.z = mDegToRad(rot.z);
+
+	QuatD rotQ(rot);
+	AngAxisD aa(rotQ);
+
+	//I negated the sign of the axis, because the sign was incorrect
+	aa.axis.x = (aa.axis.x == 0 ? 0.0 : -aa.axis.x);
+	aa.axis.y = (aa.axis.y == 0 ? 0.0 : -aa.axis.y);
+	aa.axis.z = (aa.axis.z == 0 ? 0 : -aa.axis.z);
+
+	return aa;
+}
+
+DefineConsoleFunction( AngleAxisToEulerD, EulerD, ( AngAxisD angle ),,
+   "Converts an angle axis rotation to Euler rotation (in degrees).\n\n"
+   "@param angle Angle in degrees to convert.\n"
+   "@return Angle Axis rotation/angle converted to Euler form.\n")
+{
+	MatrixD mat;
+	angle.setMatrix(&mat);
+	EulerD rot;
+	rot = mat.toEuler();
+
+	//Convert back to degrees and round a bit.
+	rot.x = mRadToDeg(rot.x);
+	rot.y = mRadToDeg(rot.y);
+	rot.z = mRadToDeg(rot.z);
+	rot.x = (rot.x == 0 ? 0.0 : rot.x);
+	rot.y = (rot.y == 0 ? 0.0 : rot.y);
+	rot.z = (rot.z == 0 ? 0.0 : rot.z);
+	
+	return rot;
+}
+
+DefineConsoleFunction( AngleAxisToPitchYawD, Point2D, ( AngAxisD angle ),,
+   "Converts an angle axis rotation to Pitch, Yaw rotation (in degrees).\n\n"
+   "@param angle Angle in degrees to convert.\n"
+   "@return Angle Axis rotation/angle converted to Pitch, Yaw form.\n")
+{
+	MatrixD mat;
+	angle.setMatrix(&mat);
+
+	VectorD axisVector[3] = {
+		VectorD(1,0,0),
+		VectorD(0,1,0),
+		VectorD(0,0,1)
+	};
+
+	VectorD localAxis[3];
+	for(U32 i = 0; i < 3; i++)
+	{
+		VectorD tmp;
+		mat.mulV(axisVector[i], &tmp);
+		localAxis[i] = tmp;
+		localAxis[i].normalizeSafe();
+	}
+
+	F32 d2 = mAcos(mDot(localAxis[2], axisVector[2])), d0 = mAcos(mDot(localAxis[0], axisVector[0])); //d1 = mDot(localAxis[1], axisVector[1]), 
+	F32 retY = (localAxis[0].y <= 0.0 ? 1.0 : -1.0) * mRadToDeg(d0);
+	retY = retY >= 0 ? retY : retY + 360.0;
+
+	Point2D pitchYaw((localAxis[2].y <= 0.0f ? 1.0 : -1.0) * mRadToDeg(d2), retY); //(localAxis[1].y < 0 ? 1.0 : -1.0) * mRadToDeg(mAcos(d1)), 
+
+	return pitchYaw;
+}
+
+DefineConsoleFunction( PitchYawToAngleAxisD, AngAxisD, ( Point2D pitchYaw ),,
+   "Converts a Pitch/Yaw angle to axis angle.\n\n"
+   "@param pitchYaw Pitch and Yaw angles to convert.\n"
+   "@return Pitch Yaw angles converted to AngleAxis.\n")
+{
+   F64 pitch(pitchYaw.x), yaw(pitchYaw.y);
+
+   MatrixD xRot(true), zRot(true), finalRot;
+   F64 cosPitch = mCos(mDegToRad(pitch)), sinPitch = mSin(mDegToRad(pitch)),
+      cosYaw = mCos(mDegToRad(yaw)), sinYaw = mSin(mDegToRad(yaw));
+   xRot(1, 1) = cosPitch; xRot(1, 2) = -sinPitch;
+   xRot(2, 1) = sinPitch; xRot(2, 2) = cosPitch;
+   zRot(0, 0) = cosYaw; zRot(0, 1) = -sinYaw;
+   zRot(1, 0) = sinYaw; zRot(1, 1) = cosYaw;
+   finalRot = xRot.mul(zRot);
+   AngAxisD aa(finalRot);
+
+   return aa;
+}
+
+DefineConsoleFunction( EulerToQuatD, Point4D, ( EulerD angle ),,
+   "Converts an Euler rotation to quaternion rotation.\n\n"
+   "@param angle Euler angle to convert.\n"
+   "@return Euler rotation converted to quaternion's.\n")
+{
+	EulerD rot(angle);
+
+	//convert to radians
+	rot.x = mDegToRad(rot.x);
+	rot.y = mDegToRad(rot.y);
+	rot.z = mDegToRad(rot.z);
+
+	QuatD rotQ(rot);
+
+	Point4D temp(rotQ.x, rotQ.y, rotQ.z, rotQ.w);
+
+	return temp;
+}
+
+DefineConsoleFunction( AngleAxisToQuatD, Point4D, ( AngAxisD angle ),,
+   "Converts an angle axis rotation to a quaternion rotation.\n\n"
+   "@param angle Angle Axis angle to convert.\n"
+   "@return Angle Axis rotation converted to quaternion's.\n")
+{
+	QuatD rotQ(angle);
+
+	Point4D temp(rotQ.x, rotQ.y, rotQ.z, rotQ.w);
+
+	return temp;
+}
+
+DefineConsoleFunction( QuatToAngleAxisD, AngAxisD, ( Point4D angle ),,
+   "Converts a quaternion rotation to angle axis rotation.\n\n"
+   "@param angle Quaternion angle to convert.\n"
+   "@return Quaternion rotation converted to Angle Axis.\n")
+{
+	QuatD quat(angle.x, angle.y, angle.z, angle.w);
+	AngAxisD aa(quat);
+
+	return aa;
+}
+
+DefineConsoleFunction( QuatToEulerD, EulerD, ( Point4D angle ),,
+   "Converts a quaternion rotation to Euler rotation.\n\n"
+   "@param angle Quaternion angle to convert.\n"
+   "@return Quaternion rotation converted to Euler.\n")
+{
+	QuatD quat(angle.x, angle.y, angle.z, angle.w);
+
+	MatrixD mat;
+	quat.setMatrix(&mat);
+	EulerD rot;
+	rot = mat.toEuler();
+	rot.x = mRadToDeg(rot.x);
+	rot.y = mRadToDeg(rot.y);
+	rot.z = mRadToDeg(rot.z);
+
+	return rot;
 }
 
 //-----------------------------------------------------------------------------

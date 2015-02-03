@@ -462,6 +462,85 @@ ConsoleSetType( TypeF32Vector )
 }
 
 //-----------------------------------------------------------------------------
+// TypeF64
+//-----------------------------------------------------------------------------
+ConsoleType( double, TypeF64, F64 )
+ImplementConsoleTypeCasters(TypeF64, F64)
+
+ConsoleGetType( TypeF64 )
+{
+   static const U32 bufSize = 256;
+   char* returnBuffer = Con::getReturnBuffer(bufSize);
+   dSprintf(returnBuffer, bufSize, "%.30g", *((F64 *) dptr) );
+   return returnBuffer;
+}
+ConsoleSetType( TypeF64 )
+{
+   if(argc == 1)
+      *((F64 *) dptr) = dAtod( argv[0] );
+   else
+      Con::printf("(TypeF64) Cannot set multiple args to a single F64.");
+}
+
+/*
+//-----------------------------------------------------------------------------
+// TypeF64Vector
+//-----------------------------------------------------------------------------
+ConsoleType( doubleList, TypeF64Vector, Vector<F64> )
+ImplementConsoleTypeCasters( TypeF64Vector, Vector< F64 > )
+
+ConsoleGetType( TypeF64Vector )
+{
+   Vector<F64> *vec = (Vector<F64> *)dptr;
+   S32 buffSize = ( vec->size() * 15 ) + 16 ;
+   char* returnBuffer = Con::getReturnBuffer( buffSize );
+   S32 maxReturn = buffSize;
+   returnBuffer[0] = '\0';
+   S32 returnLeng = 0;
+   for (Vector<F64>::iterator itr = vec->begin(); itr != vec->end(); itr++)
+   {
+      // concatenate the next value onto the return string
+      dSprintf(returnBuffer + returnLeng, maxReturn - returnLeng, "%lg ", *itr);
+      // update the length of the return string (so far)
+      returnLeng = dStrlen(returnBuffer);
+   }
+   // trim off that last extra space
+   if (returnLeng > 0 && returnBuffer[returnLeng - 1] == ' ')
+      returnBuffer[returnLeng - 1] = '\0';
+   return returnBuffer;
+}
+
+ConsoleSetType( TypeF64Vector )
+{
+   Vector<F64> *vec = (Vector<F64> *)dptr;
+   // we assume the vector should be cleared first (not just appending)
+   vec->clear();
+   if(argc == 1)
+   {
+      const char *values = argv[0];
+      const char *endValues = values + dStrlen(values);
+      F64 value;
+      // advance through the string, pulling off F32's and advancing the pointer
+      while (values < endValues && dSscanf(values, "%lg", &value) != 0)
+      {
+         vec->push_back(value);
+         const char *nextValues = dStrchr(values, ' ');
+         if (nextValues != 0 && nextValues < endValues)
+            values = nextValues + 1;
+         else
+            break;
+      }
+   }
+   else if (argc > 1)
+   {
+      for (S32 i = 0; i < argc; i++)
+         vec->push_back(dAtod(argv[i]));
+   }
+   else
+      Con::printf("Vector<F64> must be set as { a, b, c, ... } or \"a b c ...\"");
+}
+*/
+//-----------------------------------------------------------------------------
 // TypeBool
 //-----------------------------------------------------------------------------
 ConsoleType( bool, TypeBool, bool )
