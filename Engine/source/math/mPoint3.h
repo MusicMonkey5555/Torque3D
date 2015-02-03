@@ -270,6 +270,9 @@ public:
    const static Point3D Zero;
 };
 
+typedef Point3D VectorD;
+typedef Point3D EulerD;
+
 //------------------------------------------------------------------------------
 //-------------------------------------- Point3I
 //

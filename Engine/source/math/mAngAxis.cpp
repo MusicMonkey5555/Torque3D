@@ -93,3 +93,71 @@ void AngAxisF::RotateZ(F32 angle, const Point3F & from, Point3F * to)
    mat.mulV(from,to);
 }
 
+AngAxisD & AngAxisD::set( const QuatD & q )
+{
+   angle = 2.0 * mAcos( q.w );
+   F64 sinHalfAngle = mSqrt(q.x * q.x + q.y * q.y + q.z * q.z);
+   if (sinHalfAngle != 0.0)
+      axis.set( q.x / sinHalfAngle, q.y / sinHalfAngle, q.z / sinHalfAngle );
+   else
+      axis.set(1.0,0.0,0.0);
+   return *this;
+}
+
+AngAxisD & AngAxisD::set( const MatrixD & mat )
+{
+   QuatD q( mat );
+   set( q );
+   return *this;
+}
+
+MatrixD * AngAxisD::setMatrix( MatrixD * mat ) const
+{
+   QuatD q( *this );
+   return q.setMatrix( mat );
+}
+
+void AngAxisD::RotateX(F64 angle, MatrixD * mat)
+{
+   // for now...do it the easy way
+   AngAxisD rotX(Point3F(1.0,0.0,0.0),angle);
+   rotX.setMatrix(mat);
+}
+
+void AngAxisD::RotateY(F64 angle, MatrixD * mat)
+{
+   // for now...do it the easy way
+   AngAxisD rotY(Point3F(0.0,1.0,0.0),angle);
+   rotY.setMatrix(mat);
+}
+
+void AngAxisD::RotateZ(F64 angle, MatrixD * mat)
+{
+   // for now...do it the easy way
+   AngAxisD rotZ(Point3F(0.0,0.0,1.0),angle);
+   rotZ.setMatrix(mat);
+}
+
+void AngAxisD::RotateX(F64 angle, const Point3D & from, Point3D * to)
+{
+   // for now...do it the easy way
+   MatrixD mat;
+   AngAxisD::RotateX(angle,&mat);
+   mat.mulV(from,to);
+}
+
+void AngAxisD::RotateY(F64 angle, const Point3D & from, Point3D * to)
+{
+   // for now...do it the easy way
+   MatrixD mat;
+   AngAxisD::RotateY(angle,&mat);
+   mat.mulV(from,to);
+}
+
+void AngAxisD::RotateZ(F64 angle, const Point3D & from, Point3D * to)
+{
+   // for now...do it the easy way
+   MatrixD mat;
+   AngAxisD::RotateZ(angle,&mat);
+   mat.mulV(from,to);
+}

@@ -327,3 +327,315 @@ QuatF & QuatF::shortestArc( const VectorF &a, const VectorF &b )
    return *this;
 }
 
+
+const QuatD QuatD::Identity(0.0,0.0,0.0,1.0);
+
+QuatD& QuatD::set( const EulerD & e )
+{
+	/*
+   F64 cx, sx;
+   F64 cy, sy;
+   F64 cz, sz;
+   mSinCos( -e.x * 0.5, sx, cx );
+   mSinCos( -e.y * 0.5, sy, cy );
+   mSinCos( -e.z * 0.5, sz, cz );
+
+   // Qyaw(z)   = [ (0, 0, sin z/2), cos z/2 ]
+   // Qpitch(x) = [ (sin x/2, 0, 0), cos x/2 ]
+   // Qroll(y)  = [ (0, sin y/2, 0), cos y/2 ]
+   // this = Qresult = Qyaw*Qpitch*Qroll  ZXY
+   //
+   // The code that folows is a simplification of:
+   //    roll*=pitch;
+   //    roll*=yaw;
+   //    *this = roll;
+   F64 cycz, sysz, sycz, cysz;
+   cycz = cy*cz;
+   sysz = sy*sz;
+   sycz = sy*cz;
+   cysz = cy*sz;
+   w = cycz*cx + sysz*sx;
+   x = cycz*sx + sysz*cx;
+   y = sycz*cx - cysz*sx;
+   z = cysz*cx - sycz*sx;
+   */
+	// Assuming the angles are in radians.
+    F64 c1 = mCos(e.y/2.0);
+    F64 s1 = mSin(e.y/2.0);
+    F64 c2 = mCos(e.z/2.0);
+    F64 s2 = mSin(e.z/2.0);
+    F64 c3 = mCos(e.x/2.0);
+    F64 s3 = mSin(e.x/2.0);
+    F64 c1c2 = c1*c2;
+    F64 s1s2 = s1*s2;
+    w =c1c2*c3 - s1s2*s3;
+  	x =c1c2*s3 + s1s2*c3;
+	y =s1*c2*c3 + c1*s2*s3;
+	z =c1*s2*c3 - s1*c2*s3;
+
+   return *this;
+}
+
+QuatD& QuatD::operator *=( const QuatD & b )
+{
+   QuatD prod;
+   prod.w = w * b.w - x * b.x - y * b.y - z * b.z;
+   prod.x = w * b.x + x * b.w + y * b.z - z * b.y;
+   prod.y = w * b.y + y * b.w + z * b.x - x * b.z;
+   prod.z = w * b.z + z * b.w + x * b.y - y * b.x;
+   *this = prod;
+   return (*this);
+}
+
+QuatD& QuatD::operator /=( const QuatD & c )
+{
+   QuatD temp = c;
+   return ( (*this) *= temp.inverse() );
+}
+
+QuatD& QuatD::square()
+{
+   F64 t = w*2.0;
+   w = (w*w) - (x*x + y*y + z*z);
+   x *= t;
+   y *= t;
+   z *= t;
+   return *this;
+}
+
+QuatD& QuatD::inverse()
+{
+   F64 magnitude = w*w + x*x + y*y + z*z;
+   F64 invMagnitude;
+   if( magnitude == 1.0 )    // special case unit quaternion
+   {
+      x = -x;
+      y = -y;
+      z = -z;
+   }
+   else                       // else scale
+   {
+      if( magnitude == 0.0 )
+         invMagnitude = 1.0;
+      else
+         invMagnitude = 1.0 / magnitude;
+      w *= invMagnitude;
+      x *= -invMagnitude;
+      y *= -invMagnitude;
+      z *= -invMagnitude;
+   }
+   return *this;
+}
+
+QuatD & QuatD::set( const AngAxisD & a )
+{
+   return set( a.axis, a.angle );
+}
+
+QuatD & QuatD::set( const Point3D &axis, F64 angle )
+{
+   PROFILE_SCOPE( QuatD_set_AngAxisD );
+
+   F64 sinHalfAngle, cosHalfAngle;
+   mSinCos( angle * 0.5, sinHalfAngle, cosHalfAngle );
+   x = axis.x * sinHalfAngle;
+   y = axis.y * sinHalfAngle;
+   z = axis.z * sinHalfAngle;
+   w = cosHalfAngle;
+   return *this;
+}
+
+QuatD & QuatD::normalize()
+{
+   PROFILE_SCOPE( QuatD_normalize );
+
+   F64 l = mSqrt( x*x + y*y + z*z + w*w );
+   if( l == 0.0 )
+      identity();
+   else
+   {
+      x /= l;
+      y /= l;
+      z /= l;
+      w /= l;
+   }
+   return *this;
+}
+
+QuatD & QuatD::set( const MatrixD & mat )
+{
+   PROFILE_SCOPE( QuatD_set_MatrixD );
+
+   F64 const *m = mat;
+
+   F64 trace = m[idx(0, 0)] + m[idx(1, 1)] + m[idx(2, 2)];
+   if (trace > 0.0) 
+   {
+      F64 s = mSqrt(trace + F64(1));
+      w = s * 0.5;
+      s = 0.5 / s;
+      x = (m[idx(1,2)] - m[idx(2,1)]) * s;
+      y = (m[idx(2,0)] - m[idx(0,2)]) * s;
+      z = (m[idx(0,1)] - m[idx(1,0)]) * s;
+   } 
+   else 
+   {
+      F64* q = &x;
+      U32 i = 0;
+      if (m[idx(1, 1)] > m[idx(0, 0)]) i = 1;
+      if (m[idx(2, 2)] > m[idx(i, i)]) i = 2;
+      U32 j = (i + 1) % 3;
+      U32 k = (j + 1) % 3;
+
+      F32 s = mSqrt((m[idx(i, i)] - (m[idx(j, j)] + m[idx(k, k)])) + 1.0);
+      q[i] = s * 0.5;
+      s = 0.5 / s;
+      q[j] = (m[idx(i,j)] + m[idx(j,i)]) * s;
+      q[k] = (m[idx(i,k)] + m[idx(k, i)]) * s;
+      w = (m[idx(j,k)] - m[idx(k, j)]) * s;
+   }
+
+   // Added to resolve issue #2230
+   normalize();
+
+   return *this;
+}
+
+MatrixD * QuatD::setMatrix( MatrixD * mat ) const
+{
+   if( x*x + y*y + z*z < 10E-20) // isIdentity() -- substituted code a little more stringent but a lot faster
+      mat->identity();
+   else
+      m_quatD_set_matD( x, y, z, w, *mat );
+   return mat;
+}
+
+QuatD & QuatD::slerp( const QuatD & q, F64 t )
+{
+   return interpolate( *this, q, t );
+}
+
+QuatD & QuatD::extrapolate( const QuatD & q1, const QuatD & q2, F64 t )
+{
+   // assert t >= 0 && t <= 1
+   // q1 is value at time = 0
+   // q2 is value at time = t
+   // Computes quaternion at time = 1
+   F64 flip,cos = q1.x * q2.x + q1.y * q2.y + q1.z * q2.z + q1.w * q2.w;
+   if (cos < 0.0)
+   {
+      cos = -cos;
+      flip = -1.0;
+   }
+   else
+      flip = 1.0;
+
+   F64 s1,s2;
+   if ((1.0 - cos) > 0.00001)
+   {
+      F64 om = mAcos(cos) / t;
+      F64 sd = 1.0 / mSin(t * om);
+      s1 = flip * mSin(om) * sd;
+      s2 = mSin((1.0 - t) * om) * sd;
+   }
+   else
+   {
+      // If quats are very close, do linear interpolation
+      s1 = flip / t;
+      s2 = (1.0 - t) / t;
+   }
+
+   x = F64(s1 * q2.x - s2 * q1.x);
+   y = F64(s1 * q2.y - s2 * q1.y);
+   z = F64(s1 * q2.z - s2 * q1.z);
+   w = F64(s1 * q2.w - s2 * q1.w);
+
+   return *this;
+}
+
+QuatD & QuatD::interpolate( const QuatD & q1, const QuatD & q2, F64 t )
+{
+   //-----------------------------------
+   // Calculate the cosine of the angle:
+
+   double cosOmega = q1.dot( q2 );
+
+   //-----------------------------------
+   // adjust signs if necessary:
+
+   F64 sign2;
+   if ( cosOmega < 0.0 )
+   {
+      cosOmega = -cosOmega;
+      sign2 = -1.0f;
+   }
+   else
+      sign2 = 1.0f;
+
+   //-----------------------------------
+   // calculate interpolating coeffs:
+
+   double scale1, scale2;
+   if ( (1.0 - cosOmega) > 0.00001 )
+   {
+      // standard case
+      double omega = mAcos(cosOmega);
+      double sinOmega = mSin(omega);
+      scale1 = mSin((1.0 - t) * omega) / sinOmega;
+      scale2 = sign2 * mSin(t * omega) / sinOmega;
+   }
+   else
+   {
+      // if quats are very close, just do linear interpolation
+      scale1 = 1.0 - t;
+      scale2 = sign2 * t;
+   }
+
+
+   //-----------------------------------
+   // actually do the interpolation:
+
+   x = F64(scale1 * q1.x + scale2 * q2.x);
+   y = F64(scale1 * q1.y + scale2 * q2.y);
+   z = F64(scale1 * q1.z + scale2 * q2.z);
+   w = F64(scale1 * q1.w + scale2 * q2.w);
+   return *this;
+}
+
+Point3D & QuatD::mulP(const Point3D& p, Point3D* r)
+{
+   QuatD qq;
+   QuatD qi = *this;
+   QuatD qv( p.x, p.y, p.z, 0.0);
+
+   qi.inverse();
+   qq.mul(qi, qv);
+   qv.mul(qq, *this);
+   r->set(qv.x, qv.y, qv.z);
+   return *r;
+}
+
+QuatD & QuatD::mul( const QuatD &a, const QuatD &b)
+{
+   AssertFatal( &a != this && &b != this, "QuatD::mul: dest should not be same as source" );
+   w = a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z;
+   x = a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y;
+   y = a.w * b.y + a.y * b.w + a.z * b.x - a.x * b.z;
+   z = a.w * b.z + a.z * b.w + a.x * b.y - a.y * b.x;
+   return *this;
+}
+
+QuatD & QuatD::shortestArc( const VectorD &a, const VectorD &b )
+{
+   // From Game Programming Gems pg. 217
+   VectorD c = mCross( a, b );
+   F64 d = mDot( a, b );
+   F64 s = mSqrt( ( 1 + d ) * 2 );
+
+   x = c.x / s;
+   y = c.y / s;
+   z = c.z / s;
+   w = s / 2.f; 
+
+   return *this;
+}
