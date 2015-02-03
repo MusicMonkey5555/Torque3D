@@ -49,6 +49,7 @@
 
 #ifdef _MSC_VER
 #pragma warning(disable: 4996) // turn off "deprecation" warnings
+#pragma warning(disable: 4481) // turn off overide warnings
 #endif
 
 #define NOMINMAX
