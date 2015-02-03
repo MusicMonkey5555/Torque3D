@@ -21,6 +21,7 @@
 //-----------------------------------------------------------------------------
 
 #include "platformWin32/platformWin32.h"
+#include "console/console.h"
 #include "core/strings/stringFunctions.h"
 #include "core/util/journal/process.h"
 
@@ -32,7 +33,15 @@ void Platform::postQuitMessage(const S32 in_quitVal)
 
 void Platform::debugBreak()
 {
-    DebugBreak();
+#ifdef FASTDEBUG
+   // this should reduce unnecessary "crashes" in release mode
+   // although there's a chance that not crashing could cause subtle
+   // error behavior that might be harder to detect...
+   // however, it seems like another "quit" should be called in such a case anyway.
+   DebugBreak();
+#else
+   Con::printf("Error: DebugBreak occurred");
+#endif
 }
 
 void Platform::forceShutdown(S32 returnValue)
