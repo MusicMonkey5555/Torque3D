@@ -232,6 +232,41 @@ static void m_quatF_set_matF_C( F32 x, F32 y, F32 z, F32 w, F32* m )
 #undef qidx
 }
 
+static void m_quatD_set_matD_C( F64 x, F64 y, F64 z, F64 w, F64* m )
+{
+#define qidx(r,c) (r*4 + c)
+      F64 xs = x * 2.0f;
+      F64 ys = y * 2.0f;
+      F64 zs = z * 2.0f;
+      F64 wx = w * xs;
+      F64 wy = w * ys;
+      F64 wz = w * zs;
+      F64 xx = x * xs;
+      F64 xy = x * ys;
+      F64 xz = x * zs;
+      F64 yy = y * ys;
+      F64 yz = y * zs;
+      F64 zz = z * zs;
+      m[qidx(0,0)] = 1.0 - (yy + zz);
+      m[qidx(1,0)] = xy - wz;
+      m[qidx(2,0)] = xz + wy;
+      m[qidx(3,0)] = 0.0;
+      m[qidx(0,1)] = xy + wz;
+      m[qidx(1,1)] = 1.0 - (xx + zz);
+      m[qidx(2,1)] = yz - wx;
+      m[qidx(3,1)] = 0.0;
+      m[qidx(0,2)] = xz - wy;
+      m[qidx(1,2)] = yz + wx;
+      m[qidx(2,2)] = 1.0 - (xx + yy);
+      m[qidx(3,2)] = 0.0;
+
+      m[qidx(0,3)] = 0.0;
+      m[qidx(1,3)] = 0.0;
+      m[qidx(2,3)] = 0.0;
+      m[qidx(3,3)] = 1.0;
+#undef qidx
+}
+
 
 //--------------------------------------
 static void m_matF_set_euler_C(const F32 *e, F32 *result)
@@ -389,11 +424,176 @@ static void m_matF_set_euler_C(const F32 *e, F32 *result)
    }
 }
 
+//--------------------------------------
+static void m_matD_set_euler_C(const F64 *e, F64 *result)
+{
+   enum {
+      AXIS_X   = (1<<0),
+      AXIS_Y   = (1<<1),
+      AXIS_Z   = (1<<2)
+   };
+
+   U32 axis = 0;
+   if (e[0] != 0.0) axis |= AXIS_X;
+   if (e[1] != 0.0) axis |= AXIS_Y;
+   if (e[2] != 0.0) axis |= AXIS_Z;
+
+   switch (axis)
+   {
+      case 0:
+         m_matD_identity(result);
+         break;
+
+      case AXIS_X:
+      {
+         F64 cx,sx;
+         mSinCos( e[0], sx, cx );
+
+         result[0] = 1.0;
+         result[1] = 0.0;
+         result[2] = 0.0;
+         result[3] = 0.0;
+
+         result[4] = 0.0;
+         result[5] = cx;
+         result[6] = sx;
+         result[7] = 0.0;
+
+         result[8] = 0.0;
+         result[9] = -sx;
+         result[10]= cx;
+         result[11]= 0.0;
+
+         result[12]= 0.0;
+         result[13]= 0.0;
+         result[14]= 0.0;
+         result[15]= 1.0;
+         break;
+      }
+
+      case AXIS_Y:
+      {
+         F64 cy,sy;
+         mSinCos( e[1], sy, cy );
+
+         result[0] = cy;
+         result[1] = 0.0;
+         result[2] = -sy;
+         result[3] = 0.0;
+
+         result[4] = 0.0;
+         result[5] = 1.0;
+         result[6] = 0.0;
+         result[7] = 0.0;
+
+         result[8] = sy;
+         result[9] = 0.0;
+         result[10]= cy;
+         result[11]= 0.0;
+
+         result[12]= 0.0;
+         result[13]= 0.0;
+         result[14]= 0.0;
+         result[15]= 1.0;
+         break;
+      }
+
+      case AXIS_Z:
+      {
+         // the matrix looks like this:
+         //  r1 - (r4 * sin(x))     r2 + (r3 * sin(x))   -cos(x) * sin(y)
+         //  -cos(x) * sin(z)       cos(x) * cos(z)      sin(x)
+         //  r3 + (r2 * sin(x))     r4 - (r1 * sin(x))   cos(x) * cos(y)
+         //
+         // where:
+         //  r1 = cos(y) * cos(z)
+         //  r2 = cos(y) * sin(z)
+         //  r3 = sin(y) * cos(z)
+         //  r4 = sin(y) * sin(z)
+         F64 cz,sz;
+         mSinCos( e[2], sz, cz );
+
+         result[0] = cz;
+         result[1] = sz;
+         result[2] = 0.0;
+         result[3] = 0.0;
+
+         result[4] = -sz;
+         result[5] = cz;
+         result[6] = 0.0;
+         result[7] = 0.0;
+
+         result[8] = 0.0;
+         result[9] = 0.0;
+         result[10]= 1.0;
+         result[11]= 0.0;
+
+         result[12]= 0.0;
+         result[13]= 0.0;
+         result[14]= 0.0;
+         result[15]= 1.0;
+         break;
+      }
+
+      default:
+         // the matrix looks like this:
+         //  r1 - (r4 * sin(x))     r2 + (r3 * sin(x))   -cos(x) * sin(y)
+         //  -cos(x) * sin(z)       cos(x) * cos(z)      sin(x)
+         //  r3 + (r2 * sin(x))     r4 - (r1 * sin(x))   cos(x) * cos(y)
+         //
+         // where:
+         //  r1 = cos(y) * cos(z)
+         //  r2 = cos(y) * sin(z)
+         //  r3 = sin(y) * cos(z)
+         //  r4 = sin(y) * sin(z)
+         F64 cx,sx;
+         mSinCos( e[0], sx, cx );
+         F64 cy,sy;
+         mSinCos( e[1], sy, cy );
+         F64 cz,sz;
+         mSinCos( e[2], sz, cz );
+         F64 r1 = cy * cz;
+         F64 r2 = cy * sz;
+         F64 r3 = sy * cz;
+         F64 r4 = sy * sz;
+
+         result[0] = r1 - (r4 * sx);
+         result[1] = r2 + (r3 * sx);
+         result[2] = -cx * sy;
+         result[3] = 0.0;
+
+         result[4] = -cx * sz;
+         result[5] = cx * cz;
+         result[6] = sx;
+         result[7] = 0.0;
+
+         result[8] = r3 + (r2 * sx);
+         result[9] = r4 - (r1 * sx);
+         result[10]= cx * cy;
+         result[11]= 0.0;
+
+         result[12]= 0.0;
+         result[13]= 0.0;
+         result[14]= 0.0;
+         result[15]= 1.0;
+         break;
+   }
+}
+
 
 //--------------------------------------
 static void m_matF_set_euler_point_C(const F32 *e, const F32 *p, F32 *result)
 {
    m_matF_set_euler(e, result);
+   result[3] = p[0];
+   result[7] = p[1];
+   result[11]= p[2];
+}
+
+//--------------------------------------
+static void m_matD_set_euler_point_C(const F64 *e, const F64 *p, F64 *result)
+{
+   m_matD_set_euler(e, result);
    result[3] = p[0];
    result[7] = p[1];
    result[11]= p[2];
@@ -421,6 +621,29 @@ static void m_matF_identity_C(F32 *m)
    *m++ = 0.0f;
    *m++ = 0.0f;
    *m   = 1.0f;
+}
+
+static void m_matD_identity_C(F64 *m)
+{
+   *m++ = 1.0;
+   *m++ = 0.0;
+   *m++ = 0.0;
+   *m++ = 0.0;
+
+   *m++ = 0.0;
+   *m++ = 1.0;
+   *m++ = 0.0;
+   *m++ = 0.0;
+
+   *m++ = 0.0;
+   *m++ = 0.0;
+   *m++ = 1.0;
+   *m++ = 0.0;
+
+   *m++ = 0.0;
+   *m++ = 0.0;
+   *m++ = 0.0;
+   *m   = 1.0;
 }
 
 #if 0
@@ -509,6 +732,50 @@ static void m_matF_inverse_C(F32 *m)
    m[11]= temp[6];
 }
 
+static void m_matD_inverse_C(F64 *m)
+{
+   // using Cramers Rule find the Inverse
+   // Minv = (1/det(M)) * adjoint(M)
+   F64 det = m_matD_determinant( m );
+   AssertFatal( det != 0.0, "MatrixD::inverse: non-singular matrix, no inverse.");
+
+   F64 invDet = 1.0f/det;
+   F64 temp[16];
+
+   temp[0] = (m[5] * m[10]- m[6] * m[9]) * invDet;
+   temp[1] = (m[9] * m[2] - m[10]* m[1]) * invDet;
+   temp[2] = (m[1] * m[6] - m[2] * m[5]) * invDet;
+
+   temp[4] = (m[6] * m[8] - m[4] * m[10])* invDet;
+   temp[5] = (m[10]* m[0] - m[8] * m[2]) * invDet;
+   temp[6] = (m[2] * m[4] - m[0] * m[6]) * invDet;
+
+   temp[8] = (m[4] * m[9] - m[5] * m[8]) * invDet;
+   temp[9] = (m[8] * m[1] - m[9] * m[0]) * invDet;
+   temp[10]= (m[0] * m[5] - m[1] * m[4]) * invDet;
+
+   m[0] = temp[0];
+   m[1] = temp[1];
+   m[2] = temp[2];
+
+   m[4] = temp[4];
+   m[5] = temp[5];
+   m[6] = temp[6];
+
+   m[8] = temp[8];
+   m[9] = temp[9];
+   m[10] = temp[10];
+
+   // invert the translation
+   temp[0] = -m[3];
+   temp[1] = -m[7];
+   temp[2] = -m[11];
+   m_matD_x_vectorD(m, temp, &temp[4]);
+   m[3] = temp[4];
+   m[7] = temp[5];
+   m[11]= temp[6];
+}
+
 static void m_matF_invert_to_C(const F32 *m, F32 *d)
 {
    // using Cramers Rule find the Inverse
@@ -545,6 +812,42 @@ static void m_matF_invert_to_C(const F32 *m, F32 *d)
    d[ 15 ] = m[ 15 ];
 }
 
+static void m_matD_invert_to_C(const F64 *m, F64 *d)
+{
+   // using Cramers Rule find the Inverse
+   // Minv = (1/det(M)) * adjoint(M)
+   F64 det = m_matD_determinant( m );
+   AssertFatal( det != 0.0, "MatrixD::inverse: non-singular matrix, no inverse.");
+
+   F64 invDet = 1.0/det;
+
+   d[0] = (m[5] * m[10]- m[6] * m[9]) * invDet;
+   d[1] = (m[9] * m[2] - m[10]* m[1]) * invDet;
+   d[2] = (m[1] * m[6] - m[2] * m[5]) * invDet;
+
+   d[4] = (m[6] * m[8] - m[4] * m[10])* invDet;
+   d[5] = (m[10]* m[0] - m[8] * m[2]) * invDet;
+   d[6] = (m[2] * m[4] - m[0] * m[6]) * invDet;
+
+   d[8] = (m[4] * m[9] - m[5] * m[8]) * invDet;
+   d[9] = (m[8] * m[1] - m[9] * m[0]) * invDet;
+   d[10]= (m[0] * m[5] - m[1] * m[4]) * invDet;
+
+   // invert the translation
+   F64 temp[6];
+   temp[0] = -m[3];
+   temp[1] = -m[7];
+   temp[2] = -m[11];
+   m_matD_x_vectorD(d, temp, &temp[3]);
+   d[3] = temp[3];
+   d[7] = temp[4];
+   d[11]= temp[5];
+   d[ 12 ] = m[ 12 ];
+   d[ 13 ] = m[ 13 ];
+   d[ 14 ] = m[ 14 ];
+   d[ 15 ] = m[ 15 ];
+}
+
 //--------------------------------------
 static void m_matF_affineInverse_C(F32 *m)
 {
@@ -566,9 +869,37 @@ static void m_matF_affineInverse_C(F32 *m)
    m[11] = -(temp[2]*temp[3] + temp[6]*temp[7] + temp[10]*temp[11]);
 }
 
+//--------------------------------------
+static void m_matD_affineInverse_C(F64 *m)
+{
+   // Matrix class checks to make sure this is an affine transform before calling
+   //  this function, so we can proceed assuming it is...
+   F64 temp[16];
+   dMemcpy(temp, m, 16 * sizeof(F64));
+
+   // Transpose rotation
+   m[1] = temp[4];
+   m[4] = temp[1];
+   m[2] = temp[8];
+   m[8] = temp[2];
+   m[6] = temp[9];
+   m[9] = temp[6];
+
+   m[3]  = -(temp[0]*temp[3] + temp[4]*temp[7] + temp[8]*temp[11]);
+   m[7]  = -(temp[1]*temp[3] + temp[5]*temp[7] + temp[9]*temp[11]);
+   m[11] = -(temp[2]*temp[3] + temp[6]*temp[7] + temp[10]*temp[11]);
+}
+
 inline void swap(F32 &a, F32 &b)
 {
    F32 temp = a;
+   a = b;
+   b = temp;
+}
+
+inline void swap(F64 &a, F64 &b)
+{
+   F64 temp = a;
    a = b;
    b = temp;
 }
@@ -584,8 +915,28 @@ static void m_matF_transpose_C(F32 *m)
    swap(m[11],m[14]);
 }
 
+static void m_matD_transpose_C(F64 *m)
+{
+   swap(m[1], m[4]);
+   swap(m[2], m[8]);
+   swap(m[3], m[12]);
+   swap(m[6], m[9]);
+   swap(m[7], m[13]);
+   swap(m[11],m[14]);
+}
+
 //--------------------------------------
 static void m_matF_scale_C(F32 *m,const F32 *p)
+{
+   // Note, doesn't allow scaling w...
+
+   m[0]  *= p[0];  m[1]  *= p[1];  m[2]  *= p[2];
+   m[4]  *= p[0];  m[5]  *= p[1];  m[6]  *= p[2];
+   m[8]  *= p[0];  m[9]  *= p[1];  m[10] *= p[2];
+   m[12] *= p[0];  m[13] *= p[1];  m[14] *= p[2];
+}
+
+static void m_matD_scale_C(F64 *m,const F64 *p)
 {
    // Note, doesn't allow scaling w...
 
@@ -631,9 +982,51 @@ static void m_matF_normalize_C(F32 *m)
    m[10]= col2[2];
 }
 
+static void m_matD_normalize_C(F64 *m)
+{
+   F64 col0[3], col1[3], col2[3];
+   // extract columns 0 and 1
+   col0[0] = m[0];
+   col0[1] = m[4];
+   col0[2] = m[8];
+
+   col1[0] = m[1];
+   col1[1] = m[5];
+   col1[2] = m[9];
+
+   // assure their relationships to one another
+   mCross(*(Point3D*)col0, *(Point3D*)col1, (Point3D*)col2);
+   mCross(*(Point3D*)col2, *(Point3D*)col0, (Point3D*)col1);
+
+   // assure their length is 1.0f
+   m_point3D_normalize( col0 );
+   m_point3D_normalize( col1 );
+   m_point3D_normalize( col2 );
+
+   // store the normalized columns
+   m[0] = col0[0];
+   m[4] = col0[1];
+   m[8] = col0[2];
+
+   m[1] = col1[0];
+   m[5] = col1[1];
+   m[9] = col1[2];
+
+   m[2] = col2[0];
+   m[6] = col2[1];
+   m[10]= col2[2];
+}
+
 
 //--------------------------------------
 static F32 m_matF_determinant_C(const F32 *m)
+{
+   return m[0] * (m[5] * m[10] - m[6] * m[9])  +
+      m[4] * (m[2] * m[9]  - m[1] * m[10]) +
+      m[8] * (m[1] * m[6]  - m[2] * m[5])  ;
+}
+
+static F64 m_matD_determinant_C(const F64 *m)
 {
    return m[0] * (m[5] * m[10] - m[6] * m[9])  +
       m[4] * (m[2] * m[9]  - m[1] * m[10]) +
@@ -645,6 +1038,32 @@ static F32 m_matF_determinant_C(const F32 *m)
 // Removed static in order to write benchmarking code (that compares against
 // specialized SSE/AMD versions) elsewhere.
 void default_matF_x_matF_C(const F32 *a, const F32 *b, F32 *mresult)
+{
+   mresult[0] = a[0]*b[0] + a[1]*b[4] + a[2]*b[8]  + a[3]*b[12];
+   mresult[1] = a[0]*b[1] + a[1]*b[5] + a[2]*b[9]  + a[3]*b[13];
+   mresult[2] = a[0]*b[2] + a[1]*b[6] + a[2]*b[10] + a[3]*b[14];
+   mresult[3] = a[0]*b[3] + a[1]*b[7] + a[2]*b[11] + a[3]*b[15];
+
+   mresult[4] = a[4]*b[0] + a[5]*b[4] + a[6]*b[8]  + a[7]*b[12];
+   mresult[5] = a[4]*b[1] + a[5]*b[5] + a[6]*b[9]  + a[7]*b[13];
+   mresult[6] = a[4]*b[2] + a[5]*b[6] + a[6]*b[10] + a[7]*b[14];
+   mresult[7] = a[4]*b[3] + a[5]*b[7] + a[6]*b[11] + a[7]*b[15];
+
+   mresult[8] = a[8]*b[0] + a[9]*b[4] + a[10]*b[8] + a[11]*b[12];
+   mresult[9] = a[8]*b[1] + a[9]*b[5] + a[10]*b[9] + a[11]*b[13];
+   mresult[10]= a[8]*b[2] + a[9]*b[6] + a[10]*b[10]+ a[11]*b[14];
+   mresult[11]= a[8]*b[3] + a[9]*b[7] + a[10]*b[11]+ a[11]*b[15];
+
+   mresult[12]= a[12]*b[0]+ a[13]*b[4]+ a[14]*b[8] + a[15]*b[12];
+   mresult[13]= a[12]*b[1]+ a[13]*b[5]+ a[14]*b[9] + a[15]*b[13];
+   mresult[14]= a[12]*b[2]+ a[13]*b[6]+ a[14]*b[10]+ a[15]*b[14];
+   mresult[15]= a[12]*b[3]+ a[13]*b[7]+ a[14]*b[11]+ a[15]*b[15];
+}
+
+//--------------------------------------
+// Removed static in order to write benchmarking code (that compares against
+// specialized SSE/AMD versions) elsewhere.
+void default_matD_x_matD_C(const F64 *a, const F64 *b, F64 *mresult)
 {
    mresult[0] = a[0]*b[0] + a[1]*b[4] + a[2]*b[8]  + a[3]*b[12];
    mresult[1] = a[0]*b[1] + a[1]*b[5] + a[2]*b[9]  + a[3]*b[13];
@@ -690,6 +1109,15 @@ void default_matF_x_matF_C(const F32 *a, const F32 *b, F32 *mresult)
 
 //--------------------------------------
 static void m_matF_x_point4F_C(const F32 *m, const F32 *p, F32 *presult)
+{
+   AssertFatal(p != presult, "Error, aliasing matrix mul pointers not allowed here!");
+   presult[0] = m[0]*p[0] + m[1]*p[1] + m[2]*p[2]  + m[3]*p[3];
+   presult[1] = m[4]*p[0] + m[5]*p[1] + m[6]*p[2]  + m[7]*p[3];
+   presult[2] = m[8]*p[0] + m[9]*p[1] + m[10]*p[2] + m[11]*p[3];
+   presult[3] = m[12]*p[0]+ m[13]*p[1]+ m[14]*p[2] + m[15]*p[3];
+}
+
+static void m_matD_x_point4D_C(const F64 *m, const F64 *p, F64 *presult)
 {
    AssertFatal(p != presult, "Error, aliasing matrix mul pointers not allowed here!");
    presult[0] = m[0]*p[0] + m[1]*p[1] + m[2]*p[2]  + m[3]*p[3];
@@ -781,6 +1209,88 @@ static void m_matF_x_scale_x_planeF_C(const F32* m, const F32* s, const F32* p, 
    presult[3] = resultPlane.d;
 }
 
+static void m_matD_x_scale_x_planeD_C(const F64* m, const F64* s, const F64* p, F64* presult)
+{
+   // We take in a matrix, a scale factor, and a plane equation.  We want to output
+   //  the resultant normal
+   // We have T = m*s
+   // To multiply the normal, we want Inv(Tr(m*s))
+   //  Inv(Tr(ms)) = Inv(Tr(s) * Tr(m))
+   //              = Inv(Tr(m)) * Inv(Tr(s))
+   //
+   //  Inv(Tr(s)) = Inv(s) = [ 1/x   0   0  0]
+   //                        [   0 1/y   0  0]
+   //                        [   0   0 1/z  0]
+   //                        [   0   0   0  1]
+   //
+   // Since m is an affine matrix,
+   //  Tr(m) = [ [       ] 0 ]
+   //          [ [   R   ] 0 ]
+   //          [ [       ] 0 ]
+   //          [ [ x y z ] 1 ]
+   //
+   // Inv(Tr(m)) = [ [    -1 ] 0 ]
+   //              [ [   R   ] 0 ]
+   //              [ [       ] 0 ]
+   //              [ [ A B C ] 1 ]
+   // Where:
+   //
+   //  P = (x, y, z)
+   //  A = -(Row(0, r) * P);
+   //  B = -(Row(1, r) * P);
+   //  C = -(Row(2, r) * P);
+
+   MatrixD invScale(true);
+   F64* pScaleElems = invScale;
+   pScaleElems[MatrixD::idx(0, 0)] = 1.0 / s[0];
+   pScaleElems[MatrixD::idx(1, 1)] = 1.0 / s[1];
+   pScaleElems[MatrixD::idx(2, 2)] = 1.0 / s[2];
+
+   const Point3D shear( m[MatrixD::idx(3, 0)], m[MatrixD::idx(3, 1)], m[MatrixD::idx(3, 2)] );
+
+   const Point3D row0(m[MatrixD::idx(0, 0)], m[MatrixD::idx(0, 1)], m[MatrixD::idx(0, 2)]);
+   const Point3D row1(m[MatrixD::idx(1, 0)], m[MatrixD::idx(1, 1)], m[MatrixD::idx(1, 2)]);
+   const Point3D row2(m[MatrixD::idx(2, 0)], m[MatrixD::idx(2, 1)], m[MatrixD::idx(2, 2)]);
+
+   const F64 A = -mDot(row0, shear);
+   const F64 B = -mDot(row1, shear);
+   const F64 C = -mDot(row2, shear);
+
+   MatrixD invTrMatrix(true);
+   F64* destMat = invTrMatrix;
+   destMat[MatrixD::idx(0, 0)] = m[MatrixD::idx(0, 0)];
+   destMat[MatrixD::idx(1, 0)] = m[MatrixD::idx(1, 0)];
+   destMat[MatrixD::idx(2, 0)] = m[MatrixD::idx(2, 0)];
+   destMat[MatrixD::idx(0, 1)] = m[MatrixD::idx(0, 1)];
+   destMat[MatrixD::idx(1, 1)] = m[MatrixD::idx(1, 1)];
+   destMat[MatrixD::idx(2, 1)] = m[MatrixD::idx(2, 1)];
+   destMat[MatrixD::idx(0, 2)] = m[MatrixD::idx(0, 2)];
+   destMat[MatrixD::idx(1, 2)] = m[MatrixD::idx(1, 2)];
+   destMat[MatrixD::idx(2, 2)] = m[MatrixD::idx(2, 2)];
+   destMat[MatrixD::idx(0, 3)] = A;
+   destMat[MatrixD::idx(1, 3)] = B;
+   destMat[MatrixD::idx(2, 3)] = C;
+   invTrMatrix.mul(invScale);
+
+   Point3D norm(p[0], p[1], p[2]);
+   Point3D point = norm * -p[3];
+   invTrMatrix.mulP(norm);
+   norm.normalize();
+
+   MatrixD temp;
+   dMemcpy(temp, m, sizeof(F64) * 16);
+   point.x *= s[0];
+   point.y *= s[1];
+   point.z *= s[2];
+   temp.mulP(point);
+
+   PlaneD resultPlane(point, norm);
+   presult[0] = resultPlane.x;
+   presult[1] = resultPlane.y;
+   presult[2] = resultPlane.z;
+   presult[3] = resultPlane.d;
+}
+
 static void m_matF_x_box3F_C(const F32 *m, F32* min, F32* max)
 {
    // Algorithm for axis aligned bounding box adapted from
@@ -817,6 +1327,44 @@ static void m_matF_x_box3F_C(const F32 *m, F32* min, F32* max)
       max++;
    }
 }
+
+static void m_matD_x_box3D_C(const F64 *m, F64* min, F64* max)
+{
+   // Algorithm for axis aligned bounding box adapted from
+   //  Graphic Gems I, pp 548-550
+   //
+   F32 originalMin[3];
+   F32 originalMax[3];
+   originalMin[0] = min[0];
+   originalMin[1] = min[1];
+   originalMin[2] = min[2];
+   originalMax[0] = max[0];
+   originalMax[1] = max[1];
+   originalMax[2] = max[2];
+
+   min[0] = max[0] = m[3];
+   min[1] = max[1] = m[7];
+   min[2] = max[2] = m[11];
+
+   const F64 * row = &m[0];
+   for (U32 i = 0; i < 3; i++)
+   {
+      #define  Do_One_RowD(j)   {                        \
+         F64    a = (row[j] * originalMin[j]);           \
+         F64    b = (row[j] * originalMax[j]);           \
+         if (a < b) { *min += a;  *max += b; }           \
+         else       { *min += b;  *max += a; }     }
+
+      // Simpler addressing (avoiding things like [ecx+edi*4]) might be worthwhile (LH):
+      Do_One_Row(0);
+      Do_One_Row(1);
+      Do_One_Row(2);
+      row += 4;
+      min++;
+      max++;
+   }
+}
+
 
 
 void m_point3F_bulk_dot_C(const F32* refVector,
@@ -886,24 +1434,39 @@ void (*m_point3F_bulk_dot_indexed)(const F32* refVector,
                                    F32*       output) = m_point3F_bulk_dot_indexed_C;
 
 void (*m_quatF_set_matF)( F32 x, F32 y, F32 z, F32 w, F32* m ) = m_quatF_set_matF_C;
+void (*m_quatD_set_matD)( F64 x, F64 y, F64 z, F64 w, F64* m ) = m_quatD_set_matD_C;
 
 void (*m_matF_set_euler)(const F32 *e, F32 *result) = m_matF_set_euler_C;
+void (*m_matD_set_euler)(const F64 *e, F64 *result) = m_matD_set_euler_C;
 void (*m_matF_set_euler_point)(const F32 *e, const F32 *p, F32 *result) = m_matF_set_euler_point_C;
+void (*m_matD_set_euler_point)(const F64 *e, const F64 *p, F64 *result) = m_matD_set_euler_point_C;
 void (*m_matF_identity)(F32 *m)  = m_matF_identity_C;
+void (*m_matD_identity)(F64 *m)  = m_matD_identity_C;
 void (*m_matF_inverse)(F32 *m)   = m_matF_inverse_C;
+void (*m_matD_inverse)(F64 *m)   = m_matD_inverse_C;
 void (*m_matF_affineInverse)(F32 *m)   = m_matF_affineInverse_C;
+void (*m_matD_affineInverse)(F64 *m)   = m_matD_affineInverse_C;
 void (*m_matF_invert_to)(const F32 *m, F32 *d) = m_matF_invert_to_C;
+void (*m_matD_invert_to)(const F64 *m, F64 *d) = m_matD_invert_to_C;
 void (*m_matF_transpose)(F32 *m) = m_matF_transpose_C;
+void (*m_matD_transpose)(F64 *m) = m_matD_transpose_C;
 void (*m_matF_scale)(F32 *m,const F32* p) = m_matF_scale_C;
+void (*m_matD_scale)(F64 *m,const F64* p) = m_matD_scale_C;
 void (*m_matF_normalize)(F32 *m) = m_matF_normalize_C;
+void (*m_matD_normalize)(F64 *m) = m_matD_normalize_C;
 F32  (*m_matF_determinant)(const F32 *m) = m_matF_determinant_C;
+F64  (*m_matD_determinant)(const F64 *m) = m_matD_determinant_C;
 void (*m_matF_x_matF)(const F32 *a, const F32 *b, F32 *mresult)    = default_matF_x_matF_C;
+void (*m_matD_x_matD)(const F64 *a, const F64 *b, F64 *mresult)    = default_matD_x_matD_C;
 void (*m_matF_x_matF_aligned)(const F32 *a, const F32 *b, F32 *mresult)    = default_matF_x_matF_C;
 // void (*m_matF_x_point3F)(const F32 *m, const F32 *p, F32 *presult) = m_matF_x_point3F_C;
 // void (*m_matF_x_vectorF)(const F32 *m, const F32 *v, F32 *vresult) = m_matF_x_vectorF_C;
 void (*m_matF_x_point4F)(const F32 *m, const F32 *p, F32 *presult) = m_matF_x_point4F_C;
+void (*m_matD_x_point4D)(const F64 *m, const F64 *p, F64 *presult) = m_matD_x_point4D_C;
 void (*m_matF_x_scale_x_planeF)(const F32 *m, const F32* s, const F32 *p, F32 *presult) = m_matF_x_scale_x_planeF_C;
+void (*m_matD_x_scale_x_planeD)(const F64 *m, const F64* s, const F64 *p, F64 *presult) = m_matD_x_scale_x_planeD_C;
 void (*m_matF_x_box3F)(const F32 *m, F32 *min, F32 *max)    = m_matF_x_box3F_C;
+void (*m_matD_x_box3D)(const F64 *m, F64 *min, F64 *max)    = m_matD_x_box3D_C;
 
 //------------------------------------------------------------------------------
 void mInstallLibrary_C()
@@ -931,23 +1494,38 @@ void mInstallLibrary_C()
    m_point3F_bulk_dot_indexed = m_point3F_bulk_dot_indexed_C;
 
    m_quatF_set_matF        = m_quatF_set_matF_C;
+   m_quatD_set_matD        = m_quatD_set_matD_C;
 
    m_matF_set_euler        = m_matF_set_euler_C;
+   m_matD_set_euler        = m_matD_set_euler_C;
    m_matF_set_euler_point  = m_matF_set_euler_point_C;
+   m_matD_set_euler_point  = m_matD_set_euler_point_C;
    m_matF_identity         = m_matF_identity_C;
+   m_matD_identity         = m_matD_identity_C;
    m_matF_inverse          = m_matF_inverse_C;
+   m_matD_inverse          = m_matD_inverse_C;
    m_matF_affineInverse    = m_matF_affineInverse_C;
+   m_matD_affineInverse    = m_matD_affineInverse_C;
    m_matF_invert_to        = m_matF_invert_to_C;
+   m_matD_invert_to        = m_matD_invert_to_C;
    m_matF_transpose        = m_matF_transpose_C;
+   m_matD_transpose        = m_matD_transpose_C;
    m_matF_scale            = m_matF_scale_C;
+   m_matD_scale            = m_matD_scale_C;
    m_matF_normalize        = m_matF_normalize_C;
+   m_matD_normalize        = m_matD_normalize_C;
    m_matF_determinant      = m_matF_determinant_C;
+   m_matD_determinant      = m_matD_determinant_C;
    m_matF_x_matF           = default_matF_x_matF_C;
+   m_matD_x_matD           = default_matD_x_matD_C;
    m_matF_x_matF_aligned   = default_matF_x_matF_C;
 //    m_matF_x_point3F        = m_matF_x_point3F_C;
 //    m_matF_x_vectorF        = m_matF_x_vectorF_C;
    m_matF_x_point4F        = m_matF_x_point4F_C;
+   m_matD_x_point4D        = m_matD_x_point4D_C;
    m_matF_x_scale_x_planeF = m_matF_x_scale_x_planeF_C;
+   m_matD_x_scale_x_planeD = m_matD_x_scale_x_planeD_C;
    m_matF_x_box3F          = m_matF_x_box3F_C;
+   m_matD_x_box3D          = m_matD_x_box3D_C;
 }
 

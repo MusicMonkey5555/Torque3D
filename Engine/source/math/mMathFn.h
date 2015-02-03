@@ -72,24 +72,39 @@ extern void (*m_point3F_bulk_dot_indexed)(const F32* refVector,
                                           F32*       output);
 
 extern void (*m_quatF_set_matF)( F32 x, F32 y, F32 z, F32 w, F32* m );
+extern void (*m_quatD_set_matD)( F64 x, F64 y, F64 z, F64 w, F64* m );
 
 extern void (*m_matF_set_euler)(const F32 *e, F32 *result);
+extern void (*m_matD_set_euler)(const F64 *e, F64 *result);
 extern void (*m_matF_set_euler_point)(const F32 *e, const F32 *p, F32 *result);
+extern void (*m_matD_set_euler_point)(const F64 *e, const F64 *p, F64 *result);
 extern void (*m_matF_identity)(F32 *m);
+extern void (*m_matD_identity)(F64 *m);
 extern void (*m_matF_inverse)(F32 *m);
+extern void (*m_matD_inverse)(F64 *m);
 extern void (*m_matF_invert_to)(const F32 *m, F32 *d);
+extern void (*m_matD_invert_to)(const F64 *m, F64 *d);
 extern void (*m_matF_affineInverse)(F32 *m);
+extern void (*m_matD_affineInverse)(F64 *m);
 extern void (*m_matF_transpose)(F32 *m);
+extern void (*m_matD_transpose)(F64 *m);
 extern void (*m_matF_scale)(F32 *m,const F32* p);
+extern void (*m_matD_scale)(F64 *m,const F64* p);
 extern void (*m_matF_normalize)(F32 *m);
+extern void (*m_matD_normalize)(F64 *m);
 extern F32  (*m_matF_determinant)(const F32 *m);
+extern F64  (*m_matD_determinant)(const F64 *m);
 extern void (*m_matF_x_matF)(const F32 *a, const F32 *b, F32 *mresult);
+extern void (*m_matD_x_matD)(const F64 *a, const F64 *b, F64 *mresult);
 extern void (*m_matF_x_matF_aligned)(const F32 *a, const F32 *b, F32 *mresult);
 // extern void (*m_matF_x_point3F)(const F32 *m, const F32 *p, F32 *presult);
 // extern void (*m_matF_x_vectorF)(const F32 *m, const F32 *v, F32 *vresult);
 extern void (*m_matF_x_point4F)(const F32 *m, const F32 *p, F32 *presult);
+extern void (*m_matD_x_point4D)(const F64 *m, const F64 *p, F64 *presult);
 extern void (*m_matF_x_scale_x_planeF)(const F32 *m, const F32* s, const F32 *p, F32 *presult);
+extern void (*m_matD_x_scale_x_planeD)(const F64 *m, const F64* s, const F64 *p, F64 *presult);
 extern void (*m_matF_x_box3F)(const F32 *m, F32 *min, F32 *max);
+extern void (*m_matD_x_box3D)(const F64 *m, F64 *min, F64 *max);
 
 // Note that x must point to at least 4 values for quartics, and 3 for cubics
 extern U32 (*mSolveQuadratic)(F32 a, F32 b, F32 c, F32* x);
@@ -122,6 +137,27 @@ inline void m_matF_x_point3F(const F32 *m, const F32 *p, F32 *presult)
 #endif
 }
 
+inline void m_matD_x_point3D(const F64 *m, const F64 *p, F64 *presult)
+{
+   AssertFatal(p != presult, "Error, aliasing matrix mul pointers not allowed here!");
+   
+#ifdef TORQUE_COMPILER_GCC
+   const F64   p0 = p[0], p1 = p[1], p2 = p[2];
+   const F64   m0 = m[0], m1 = m[1], m2 = m[2];
+   const F64   m3 = m[3], m4 = m[4], m5 = m[5];
+   const F64   m6 = m[6], m7 = m[7], m8 = m[8];
+   const F64   m9 = m[9], m10 = m[10], m11 = m[11];
+   
+   presult[0] = m0*p0 + m1*p1 + m2*p2  + m3;
+   presult[1] = m4*p0 + m5*p1 + m6*p2  + m7;
+   presult[2] = m8*p0 + m9*p1 + m10*p2 + m11;
+#else
+   presult[0] = m[0]*p[0] + m[1]*p[1] + m[2]*p[2]  + m[3];
+   presult[1] = m[4]*p[0] + m[5]*p[1] + m[6]*p[2]  + m[7];
+   presult[2] = m[8]*p[0] + m[9]*p[1] + m[10]*p[2] + m[11];
+#endif
+}
+
 
 //--------------------------------------
 inline void m_matF_x_vectorF(const F32 *m, const F32 *v, F32 *vresult)
@@ -133,6 +169,26 @@ inline void m_matF_x_vectorF(const F32 *m, const F32 *v, F32 *vresult)
    const F32   m0 = m[0], m1 = m[1], m2 = m[2];
    const F32   m4 = m[4], m5 = m[5], m6 = m[6];
    const F32   m8 = m[8], m9 = m[9], m10 = m[10];
+   
+   vresult[0] = m0*v0 + m1*v1 + m2*v2;
+   vresult[1] = m4*v0 + m5*v1 + m6*v2;
+   vresult[2] = m8*v0 + m9*v1 + m10*v2;
+#else
+   vresult[0] = m[0]*v[0] + m[1]*v[1] + m[2]*v[2];
+   vresult[1] = m[4]*v[0] + m[5]*v[1] + m[6]*v[2];
+   vresult[2] = m[8]*v[0] + m[9]*v[1] + m[10]*v[2];
+#endif
+}
+
+inline void m_matD_x_vectorD(const F64 *m, const F64 *v, F64 *vresult)
+{
+   AssertFatal(v != vresult, "Error, aliasing matrix mul pointers not allowed here!");
+
+#ifdef TORQUE_COMPILER_GCC
+   const F64   v0 = v[0], v1 = v[1], v2 = v[2];
+   const F64   m0 = m[0], m1 = m[1], m2 = m[2];
+   const F64   m4 = m[4], m5 = m[5], m6 = m[6];
+   const F64   m8 = m[8], m9 = m[9], m10 = m[10];
    
    vresult[0] = m0*v0 + m1*v1 + m2*v2;
    vresult[1] = m4*v0 + m5*v1 + m6*v2;
@@ -452,6 +508,16 @@ inline bool mIsNaN_F( const F32 x )
    return ( x != x );
 }
 
+//not sure if this will work, but it will compile :)
+inline bool mIsNaN_D( const F64 x )
+{
+   // If x is a floating point variable, then (x != x) will be TRUE if x has the value NaN. 
+   // This is only going to work if the compiler is IEEE 748 compliant.
+   //
+   // Tested and working on VC2k5
+   return ( x != x );
+}
+
 inline bool mIsInf_F( const F32 x )
 {
    return ( x == std::numeric_limits< F32 >::infinity() );
@@ -479,5 +545,13 @@ inline F64 mSquared( F64 n )
    return n * n;
 }
 
+///Return the given angular value converted to be less than aMax,
+///and within a single revolution
+inline F64 mAngleWrap(F64 a, F64 aMax)
+{
+	while(a < (aMax - M_2PI)) a += M_2PI;
+	while(a > aMax) a -= M_2PI;
+	return a;
+}
 
 #endif //_MMATHFN_H_
