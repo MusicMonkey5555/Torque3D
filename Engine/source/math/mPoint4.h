@@ -242,4 +242,176 @@ inline bool mIsNaN( const Point4F &p )
    return mIsNaN_F( p.x ) || mIsNaN_F( p.y ) || mIsNaN_F( p.z ) || mIsNaN_F( p.w );
 }
 
+//------------------------------------------------------------------------------
+/// 4D floating-point point.
+///
+/// Uses F64 internally.
+///
+/// Useful for representing quaternions and other 4d beasties.
+class Point4D
+{
+   //-------------------------------------- Public data
+  public:
+   F64 x;   ///< X co-ordinate.
+   F64 y;   ///< Y co-ordinate.
+   F64 z;   ///< Z co-ordinate.
+   F64 w;   ///< W co-ordinate.
+
+  public:
+   Point4D();               ///< Create an uninitialized point.
+   Point4D(const Point4D&); ///< Copy constructor.
+
+   /// Create point from coordinates.
+   Point4D(F64 _x, F64 _y, F64 _z, F64 _w);
+   Point4D(const Point3D&);
+
+   /// Set point's coordinates.
+   void set(F64 _x, F64 _y, F64 _z, F64 _w);
+
+   /// Interpolate from _pt1 to _pt2, based on _factor.
+   ///
+   /// @param   _pt1    Starting point.
+   /// @param   _pt2    Ending point.
+   /// @param   _factor Interpolation factor (0.0 .. 1.0).
+   void interpolate(const Point4D& _pt1, const Point4D& _pt2, F64 _factor);
+
+   operator F64*() { return (&x); }
+   operator const F64*() const { return &x; }
+   
+   F64 len() const;
+
+   Point4D operator/(F64) const;
+
+   Point4D operator*(F64) const;
+   Point4D  operator+(const Point4D&) const;
+   Point4D& operator+=(const Point4D&);
+   Point4D  operator-(const Point4D&) const;      
+   Point4D operator*(const Point4D&) const;
+   Point4D& operator*=(const Point4D&);
+   Point4D& operator=(const Point3D&);
+   Point4D& operator=(const Point4D&);
+   
+   Point3D asPoint3D() const { return Point3D(x,y,z); }
+
+	//-------------------------------------- Public static constants
+  public:
+	const static Point4D One;
+	const static Point4D Zero;
+};
+
+typedef Point4D Vector4D;   ///< Points can be vectors!
+
+//------------------------------------------------------------------------------
+//-------------------------------------- Point4D
+//
+inline Point4D::Point4D()
+{
+}
+
+inline Point4D::Point4D(const Point4D& _copy)
+ : x(_copy.x), y(_copy.y), z(_copy.z), w(_copy.w)
+{
+}
+
+inline Point4D::Point4D(const Point3D& _copy)
+ : x(_copy.x), y(_copy.y), z(_copy.z), w(1.0)
+{
+   //
+}
+inline Point4D::Point4D(F64 _x, F64 _y, F64 _z, F64 _w)
+ : x(_x), y(_y), z(_z), w(_w)
+{
+}
+
+inline void Point4D::set(F64 _x, F64 _y, F64 _z, F64 _w)
+{
+   x = _x;
+   y = _y;
+   z = _z;
+   w = _w;
+}
+
+inline F64 Point4D::len() const
+{
+   return mSqrt(x*x + y*y + z*z + w*w);
+}
+
+inline void Point4D::interpolate(const Point4D& _from, const Point4D& _to, F64 _factor)
+{
+   x = (_from.x * (1.0f - _factor)) + (_to.x * _factor);
+   y = (_from.y * (1.0f - _factor)) + (_to.y * _factor);
+   z = (_from.z * (1.0f - _factor)) + (_to.z * _factor);
+   w = (_from.w * (1.0f - _factor)) + (_to.w * _factor);
+}
+
+inline Point4D& Point4D::operator=(const Point3D &_vec)
+{
+   x = _vec.x;
+   y = _vec.y;
+   z = _vec.z;
+   w = 1.0f;
+   return *this;
+}
+
+inline Point4D& Point4D::operator=(const Point4D &_vec)
+{
+   x = _vec.x;
+   y = _vec.y;
+   z = _vec.z;
+   w = _vec.w;
+
+   return *this;
+}
+
+inline Point4D Point4D::operator+(const Point4D& _add) const
+{
+   return Point4D( x + _add.x, y + _add.y, z + _add.z, w + _add.w );
+}
+
+inline Point4D& Point4D::operator+=(const Point4D& _add)
+{
+   x += _add.x;
+   y += _add.y;
+   z += _add.z;
+   w += _add.w;
+
+   return *this;
+}
+
+inline Point4D Point4D::operator-(const Point4D& _rSub) const
+{
+   return Point4D( x - _rSub.x, y - _rSub.y, z - _rSub.z, w - _rSub.w );
+}
+
+inline Point4D Point4D::operator*(const Point4D &_vec) const
+{
+   return Point4D(x * _vec.x, y * _vec.y, z * _vec.z, w * _vec.w);
+}
+
+inline Point4D Point4D::operator*(F64 _mul) const
+{
+   return Point4D(x * _mul, y * _mul, z * _mul, w * _mul);
+}
+
+inline Point4D Point4D::operator /(F64 t) const
+{
+   F64 f = 1.0f / t;
+   return Point4D( x * f, y * f, z * f, w * f );
+}
+
+//-------------------------------------------------------------------
+// Non-Member Operators
+//-------------------------------------------------------------------
+
+inline Point4D operator*(F64 mul, const Point4D& multiplicand)
+{
+   return multiplicand * mul;
+}
+
+inline bool mIsNaN( const Point4D &p )
+{
+   return mIsNaN_D( p.x ) || mIsNaN_D( p.y ) || mIsNaN_D( p.z ) || mIsNaN_D( p.w );
+}
+
+
 #endif // _MPOINT4_H_
