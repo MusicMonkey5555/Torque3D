@@ -59,55 +59,54 @@ F32      EditTSCtrl::smVisibleDistanceScale = 1.0f;
 U32      EditTSCtrl::smSceneBoundsMask = EnvironmentObjectType | TerrainObjectType | WaterObjectType | CameraObjectType;
 Point3F  EditTSCtrl::smMinSceneBounds = Point3F(500.0f, 500.0f, 500.0f);
 
-EditTSCtrl::EditTSCtrl()
+EditTSCtrl::EditTSCtrl():
+   mGizmoProfile(NULL),
+   mGizmo(NULL),
+
+   mRenderMissionArea(true),
+   mMissionAreaFillColor(255,0,0,20),
+   mMissionAreaFrameColor(255,0,0,128),
+   mMissionAreaHeightAdjust(5.0f),
+
+   mConsoleFrameColor(255,0,0,255),
+   mConsoleFillColor(255,0,0,120),
+   mConsoleSphereLevel(1),
+   mConsoleCircleSegments(32),
+   mConsoleLineWidth(1),
+   mRightMousePassThru(true),
+   mMiddleMousePassThru(true),
+
+   mConsoleRendering(false),
+
+   mDisplayType(DisplayTypePerspective),
+   mOrthoFOV(50.0f),
+   mOrthoCamTrans(0.0f, 0.0f, 0.0f),
+
+   mIsoCamAngle(mDegToRad(45.0f)),
+   mIsoCamRot(EulerF(0, 0, 0)),
+
+   mRenderGridPlane(true),
+   mGridPlaneOriginColor(255, 255, 255, 100),
+   mGridPlaneColor(102, 102, 102, 100),
+   mGridPlaneMinorTickColor(51, 51, 51, 100),
+   mGridPlaneMinorTicks(9),
+   mGridPlaneSize(1.0f),
+   mGridPlaneSizePixelBias(10.0f),
+
+   mLastMousePos(0, 0),
+
+   mAllowBorderMove(false),
+   mMouseMoveBorder(20),
+   mMouseMoveSpeed(0.1f),
+   mLastBorderMoveTime(0),
+   mLeftMouseDown(false),
+   mRightMouseDown(false),
+   mMiddleMouseDown(false),
+   mMiddleMouseTriggered(false),
+   mMouseLeft(false),
+
+   mBlendSB(NULL)
 {
-   mGizmoProfile = NULL;
-   mGizmo = NULL;
-
-   mRenderMissionArea = true;
-   mMissionAreaFillColor.set(255,0,0,20);
-   mMissionAreaFrameColor.set(255,0,0,128);
-   mMissionAreaHeightAdjust = 5.0f;
-
-   mConsoleFrameColor.set(255,0,0,255);
-   mConsoleFillColor.set(255,0,0,120);
-   mConsoleSphereLevel = 1;
-   mConsoleCircleSegments = 32;
-   mConsoleLineWidth = 1;
-   mRightMousePassThru = true;
-   mMiddleMousePassThru = true;
-
-   mConsoleRendering = false;
-
-   mDisplayType = DisplayTypePerspective;
-   mOrthoFOV = 50.0f;
-   mOrthoCamTrans.set(0.0f, 0.0f, 0.0f);
-
-   mIsoCamAngle = mDegToRad(45.0f);
-   mIsoCamRot = EulerF(0, 0, 0);
-
-   mRenderGridPlane = true;
-   mGridPlaneOriginColor = ColorI(255, 255, 255, 100);
-   mGridPlaneColor = ColorI(102, 102, 102, 100);
-   mGridPlaneMinorTickColor = ColorI(51, 51, 51, 100);
-   mGridPlaneMinorTicks = 9;
-   mGridPlaneSize = 1.0f;
-   mGridPlaneSizePixelBias = 10.0f;
-
-   mLastMousePos.set(0, 0);
-
-   mAllowBorderMove = false;
-   mMouseMoveBorder = 20;
-   mMouseMoveSpeed = 0.1f;
-   mLastBorderMoveTime = 0;
-   mLeftMouseDown = false;
-   mRightMouseDown = false;
-   mMiddleMouseDown = false;
-   mMiddleMouseTriggered = false;
-   mMouseLeft = false;
-
-   mBlendSB = NULL;
-
 }
 
 EditTSCtrl::~EditTSCtrl()
