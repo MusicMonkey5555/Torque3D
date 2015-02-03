@@ -1105,7 +1105,12 @@ bool Platform::fileTimeToString(FileTime * time, char * string, U32 strLen)
    if(!time || !string)
       return(false);
 
-   dSprintf(string, strLen, "%d:%d", time->v2, time->v1);
+	SYSTEMTIME sTime;
+	if(!FileTimeToSystemTime((FILETIME*)time,&sTime))
+		return(false);
+
+	dSprintf(string, strLen, "%d %d %d %d %d %d %d %d",
+		sTime.wDayOfWeek, sTime.wMonth, sTime.wDay, sTime.wYear, sTime.wHour, sTime.wMinute, sTime.wSecond, sTime.wMilliseconds);
    return(true);
 }
 
