@@ -253,6 +253,131 @@ DefineConsoleFunction( mDegToRad, F32, ( F32 degrees ),,
    return mDegToRad( degrees );
 }
 
+//------------------------F64 Script Functions-------------------------
+
+DefineConsoleFunction( mAbsD, F64, ( F64 v ),,
+    "Calculate absolute value of specified value, handles F64(doubles).\n"
+    "@param v Input Value."
+    "@returns Absolute value of specified value."
+    "@ingroup Math" )
+{
+   return mFabs( v );
+}
+
+DefineConsoleFunction( mFModD, F64, ( F64 v, F64 d ),,
+    "Calculate the remainder of v/d, handles F64(doubles).\n"
+    "@param v Input Value."
+    "@param d Divisor Value."
+    "@returns The remainder of v/d."
+    "@ingroup Math" )
+{
+   return mFmod( v, d );
+}
+
+DefineConsoleFunction( mSqrtD, F64, ( F64 v ),,
+    "Calculate the square-root of v, handles F64(doubles).\n"
+    "@param v Input Value."
+    "@returns The square-root of the input value."
+    "@ingroup Math" )
+{
+   return mSqrt (v );
+}
+
+DefineConsoleFunction( mPowD, F64, ( F64 v, F64 p ),,
+    "Calculate b raised to the p-th power, handles F64(doubles).\n"
+    "@param v Input Value."
+    "@param p Power to raise value by."
+    "@returns v raised to the p-th power."
+    "@ingroup Math" )
+{
+   return mPow( v, p );
+}
+
+DefineConsoleFunction( mLogD, F64, ( F64 v ),,
+    "Calculate the natural logarithm of v, handles F64(doubles).\n"
+    "@param v Input Value."
+    "@returns The natural logarithm of the input value."
+    "@ingroup Math" )
+{
+   return mLog( v );
+}
+
+DefineConsoleFunction( mSinD, F64, ( F64 v ),,
+    "Calculate the sine of v, handles F64(doubles).\n"
+    "@param v Input Value (in radians)."
+    "@returns The sine of the input value."
+    "@ingroup Math" )
+{
+   return mSin( v );
+}
+
+DefineConsoleFunction( mCosD, F64, ( F64 v ),,
+    "Calculate the cosine of v, handles F64(doubles).\n"
+    "@param v Input Value (in radians)."
+    "@returns The cosine of the input value."
+    "@ingroup Math" )
+{
+   return mCos( v );
+}
+
+DefineConsoleFunction( mTanD, F64, ( F64 v ),,
+    "Calculate the tangent of v, handles F64(doubles).\n"
+    "@param v Input Value (in radians)."
+    "@returns The tangent of the input value."
+    "@ingroup Math" )
+{
+   return mTan( v );
+}
+
+DefineConsoleFunction( mAsinD, F64, ( F64 v ),,
+    "Calculate the arc-sine of v, handles F64(doubles).\n"
+    "@param v Input Value (in radians)."
+    "@returns The arc-sine of the input value."
+    "@ingroup Math" )
+{
+   return mAsin( v );
+}
+
+DefineConsoleFunction( mAcosD, F64, ( F64 v ),,
+    "Calculate the arc-cosine of v, handles F64(doubles).\n"
+    "@param v Input Value (in radians)."
+    "@returns The arc-cosine of the input value."
+    "@ingroup Math" )
+{
+   return mAcos( v );
+}
+
+DefineConsoleFunction( mAtanD, F64, ( F64 rise, F64 run ),,
+    "Calculate the arc-tangent (slope) of a line defined by rise and run, handles F64(doubles).\n"
+    "@param rise of line."
+    "@param run of line."
+    "@returns The arc-tangent (slope) of a line defined by rise and run."
+    "@ingroup Math" )
+{
+   return mAtan2( rise, run );
+}
+
+DefineConsoleFunction( mRadToDegD, F64, ( F64 radians ),,
+	"Convert specified radians into degrees, handles F64(doubles).\n"
+    "@param radians Input Value (in radians)."
+    "@returns The specified radians value converted to degrees."
+    "@ingroup Math" )
+{
+   return mRadToDeg( radians );
+}
+
+DefineConsoleFunction( mDegToRadD, F64, ( F64 degrees ),,
+    "Convert specified degrees into radians, handles F64(doubles).\n"
+    "@param degrees Input Value (in degrees)."
+    "@returns The specified degrees value converted to radians."
+    "@ingroup Math" )
+{
+   return mDegToRad( degrees );
+}
+
+
+//------------------------End F64 Script Functions-------------------------
+
 DefineConsoleFunction( mClamp, F32, ( F32 v, F32 min, F32 max ),,
     "Clamp the specified value between two bounds.\n"
     "@param v Input value."
