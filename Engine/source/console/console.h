@@ -121,8 +121,9 @@ public:
    
    enum
    {
-      TypeInternalInt = -4,
-      TypeInternalFloat = -3,
+      TypeInternalInt = -5,
+      TypeInternalFloat = -4,
+	  TypeInternalDouble = -3,
       TypeInternalStackString = -2,
       TypeInternalString = -1,
    };
@@ -149,6 +150,7 @@ public:
          char *sval;
          U32 ival;  // doubles as strlen when type is TypeInternalString
          F32 fval;
+		 F64 dval;
          U32 bufferLen;
       };
       
@@ -165,12 +167,14 @@ public:
    U32 getIntValue();
    S32 getSignedIntValue();
    F32 getFloatValue();
+   F64 getDoubleValue();
    const char *getStringValue();
    bool getBoolValue();
    
    void setIntValue(U32 val);
    void setIntValue(S32 val);
    void setFloatValue(F32 val);
+   void setDoubleValue(F64 val);
    void setStringValue(const char *value);
    void setStackStringValue(const char *value);
    void setBoolValue(bool val);
@@ -179,6 +183,7 @@ public:
    {
       ival = 0;
       fval = 0;
+	  dval = 0;
       sval = typeValueEmpty;
       bufferLen = 0;
    }
@@ -192,6 +197,7 @@ public:
       type = ConsoleValue::TypeInternalString;
       ival = 0;
       fval = 0;
+	  dval = 0;
       bufferLen = 0;
    }
 };
@@ -222,6 +228,7 @@ public:
    inline U32 getIntValue() { return value ? value->getIntValue() : 0; }
    inline S32 getSignedIntValue() { return value ? value->getSignedIntValue() : 0; }
    inline F32 getFloatValue() { return value ? value->getFloatValue() : 0.0f; }
+   inline F64 getDoubleValue() { return value ? value->getDoubleValue() : 0.0; }
    inline bool getBoolValue() { return value ? value->getBoolValue() : false; }
 
    inline operator const char*() { return getStringValue(); }
@@ -229,10 +236,12 @@ public:
    inline operator U32() { return getIntValue(); }
    inline operator S32() { return getSignedIntValue(); }
    inline operator F32() { return getFloatValue(); }
+   inline operator F64() { return getDoubleValue(); }
 
    inline bool isString() { return value ? value->type >= ConsoleValue::TypeInternalStackString : true; }
    inline bool isInt() { return value ? value->type == ConsoleValue::TypeInternalInt : false; }
    inline bool isFloat() { return value ? value->type == ConsoleValue::TypeInternalFloat : false; }
+   inline bool isDouble() { return value ? value->type == ConsoleValue::TypeInternalDouble : false; }
 
    // Note: operators replace value
    ConsoleValueRef& operator=(const ConsoleValueRef &other);
@@ -253,6 +262,11 @@ inline S32 dAtoi(ConsoleValueRef &ref)
 inline F32 dAtof(ConsoleValueRef &ref)
 {
    return ref.getFloatValue();
+}
+
+inline F32 dAtod(ConsoleValueRef &ref)
+{
+   return ref.getDoubleValue();
 }
 
 inline bool dAtob(ConsoleValue &ref)
@@ -297,7 +311,7 @@ public:
 ///
 /// The scripting engine makes heavy use of callbacks to represent
 /// function exposed to the scripting language. StringCallback,
-/// IntCallback, FloatCallback, VoidCallback, and BoolCallback all
+/// IntCallback, DoubleCallback, FloatCallback, VoidCallback, and BoolCallback all
 /// represent exposed script functions returning different types.
 ///
 /// ConsumerCallback is used with the function Con::addConsumer; functions
@@ -314,6 +328,7 @@ public:
 typedef const char * (*StringCallback)(SimObject *obj, S32 argc, ConsoleValueRef argv[]);
 typedef S32             (*IntCallback)(SimObject *obj, S32 argc, ConsoleValueRef argv[]);
 typedef F32           (*FloatCallback)(SimObject *obj, S32 argc, ConsoleValueRef argv[]);
+typedef F64           (*DoubleCallback)(SimObject *obj, S32 argc, ConsoleValueRef argv[]);
 typedef void           (*VoidCallback)(SimObject *obj, S32 argc, ConsoleValueRef argv[]); // We have it return a value so things don't break..
 typedef bool           (*BoolCallback)(SimObject *obj, S32 argc, ConsoleValueRef argv[]);
 
@@ -631,6 +646,15 @@ namespace Con
    /// @param  def   Default value to supply if no matching variable is found.
    F32  getFloatVariable(const char* name,F32 def = .0f);
 
+   /// Same as setVariable(), but for doubles.
+   void setDoubleVariable(const char* name,F64 var);
+
+   /// Same as getVariable(), but for doubles.
+   ///
+   /// @param  name  Name of the variable.
+   /// @param  def   Default value to supply if no matching variable is found.
+   F64  getDoubleVariable(const char* name,F64 def = .0);
+
    /// @}
 
    /// @name Global Function Registration
@@ -649,6 +673,7 @@ namespace Con
 
    void addCommand( const char* name, IntCallback    cb, const char* usage, S32 minArgs, S32 maxArgs, bool toolOnly = false, ConsoleFunctionHeader* header = NULL ); ///< @copydoc addCommand( const char *, StringCallback, const char *, S32, S32, bool, ConsoleFunctionHeader* )
    void addCommand( const char* name, FloatCallback  cb, const char* usage, S32 minArgs, S32 maxArgs, bool toolOnly = false, ConsoleFunctionHeader* header = NULL ); ///< @copydoc addCommand( const char *, StringCallback, const char *, S32, S32, bool, ConsoleFunctionHeader* )
+   void addCommand( const char* name, DoubleCallback  cb, const char* usage, S32 minArgs, S32 maxArgs, bool toolOnly = false, ConsoleFunctionHeader* header = NULL ); ///< @copydoc addCommand( const char *, StringCallback, const char *, S32, S32, bool, ConsoleFunctionHeader* )
    void addCommand( const char* name, VoidCallback   cb, const char* usage, S32 minArgs, S32 maxArgs, bool toolOnly = false, ConsoleFunctionHeader* header = NULL ); ///< @copydoc addCommand( const char *, StringCallback, const char *, S32, S32, bool, ConsoleFunctionHeader* )
    void addCommand( const char* name, BoolCallback   cb, const char* usage, S32 minArgs, S32 maxArgs, bool toolOnly = false, ConsoleFunctionHeader* header = NULL ); ///< @copydoc addCommand( const char *, StringCallback, const char *, S32, S32, bool, ConsoleFunctionHeader* )
    
@@ -672,6 +697,7 @@ namespace Con
 
    void addCommand(const char *nameSpace, const char *name,IntCallback cb,    const char *usage, S32 minArgs, S32 maxArgs, bool toolOnly = false, ConsoleFunctionHeader* header = NULL ); ///< @copydoc addCommand( const char*, const char *, StringCallback, const char *, S32, S32, bool, ConsoleFunctionHeader* )
    void addCommand(const char *nameSpace, const char *name,FloatCallback cb,  const char *usage, S32 minArgs, S32 maxArgs, bool toolOnly = false, ConsoleFunctionHeader* header = NULL ); ///< @copydoc addCommand( const char*, const char *, StringCallback, const char *, S32, S32, bool, ConsoleFunctionHeader* )
+   void addCommand(const char *nameSpace, const char *name,DoubleCallback cb,  const char *usage, S32 minArgs, S32 maxArgs, bool toolOnly = false, ConsoleFunctionHeader* header = NULL ); ///< @copydoc addCommand( const char*, const char *, StringCallback, const char *, S32, S32, bool, ConsoleFunctionHeader* )
    void addCommand(const char *nameSpace, const char *name,VoidCallback cb,   const char *usage, S32 minArgs, S32 maxArgs, bool toolOnly = false, ConsoleFunctionHeader* header = NULL ); ///< @copydoc addCommand( const char*, const char *, StringCallback, const char *, S32, S32, bool, ConsoleFunctionHeader* )
    void addCommand(const char *nameSpace, const char *name,BoolCallback cb,   const char *usage, S32 minArgs, S32 maxArgs, bool toolOnly = false, ConsoleFunctionHeader* header = NULL ); ///< @copydoc addCommand( const char*, const char *, StringCallback, const char *, S32, S32, bool, ConsoleFunctionHeader* )
 
@@ -939,6 +965,7 @@ public:
    StringCallback sc;   ///< A function/method that returns a string.
    IntCallback ic;      ///< A function/method that returns an int.
    FloatCallback fc;    ///< A function/method that returns a float.
+   DoubleCallback dc;    ///< A function/method that returns a double.
    VoidCallback vc;     ///< A function/method that returns nothing.
    BoolCallback bc;     ///< A function/method that returns a bool.
    bool group;          ///< Indicates that this is a group marker.
@@ -951,7 +978,7 @@ public:
    /// Minimum number of arguments expected by the function.
    S32 mina;
    
-   /// Maximum number of arguments accepted by the funtion.  Zero for varargs.
+   /// Maximum number of arguments accepted by the function.  Zero for varargs.
    S32 maxa;
       
    /// Name of the function/method.
@@ -1048,6 +1075,7 @@ public:
    ConsoleConstructor( const char* className, const char* funcName, StringCallback sfunc, const char* usage,  S32 minArgs, S32 maxArgs, bool toolOnly = false, ConsoleFunctionHeader* header = NULL );
    ConsoleConstructor( const char* className, const char* funcName, IntCallback    ifunc, const char* usage,  S32 minArgs, S32 maxArgs, bool toolOnly = false, ConsoleFunctionHeader* header = NULL );
    ConsoleConstructor( const char* className, const char* funcName, FloatCallback  ffunc, const char* usage,  S32 minArgs, S32 maxArgs, bool toolOnly = false, ConsoleFunctionHeader* header = NULL );
+   ConsoleConstructor( const char* className, const char* funcName, DoubleCallback  ffunc, const char* usage,  S32 minArgs, S32 maxArgs, bool toolOnly = false, ConsoleFunctionHeader* header = NULL );
    ConsoleConstructor( const char* className, const char* funcName, VoidCallback   vfunc, const char* usage,  S32 minArgs, S32 maxArgs, bool toolOnly = false, ConsoleFunctionHeader* header = NULL );
    ConsoleConstructor( const char* className, const char* funcName, BoolCallback   bfunc, const char* usage,  S32 minArgs, S32 maxArgs, bool toolOnly = false, ConsoleFunctionHeader* header = NULL );
    

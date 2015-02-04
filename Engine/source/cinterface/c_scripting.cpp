@@ -276,6 +276,25 @@ extern "C" {
       return entry->cb.mFloatCallbackFunc(o, args.count(), args);
    }
 
+   F64 script_call_namespace_entry_double(Namespace::Entry* entry, S32 argc, const char** argv)
+   {
+      // maxArgs improper on a number of console function/methods
+      if (argc < entry->mMinArgs)// || argc > entry->mMaxArgs)
+         return 0.0;
+
+      SimObject* o = NULL;
+
+      if (entry->mNamespace && entry->mNamespace->isClass())
+      {
+         o = Sim::findObject(dAtoi(argv[1]));
+         if (!o)
+            return 0.0;
+      }
+
+      StringStackConsoleWrapper args(argc, argv);
+      return entry->cb.mDoubleCallbackFunc(o, args.count(), args);
+   }
+
 
    void script_call_namespace_entry_void(Namespace::Entry* entry, S32 argc, const char** argv)
    {
@@ -380,6 +399,14 @@ extern "C" {
    }
 
    void script_export_callback_float(FloatCallback cb, const char *nameSpace, const char *funcName, const char* usage,  S32 minArgs, S32 maxArgs)
+   {
+      if (!nameSpace || !dStrlen(nameSpace))
+         Con::addCommand(funcName, cb, usage, minArgs + 1, maxArgs + 1);
+      else
+         Con::addCommand(nameSpace, funcName, cb, usage, minArgs + 1, maxArgs + 1);
+   }
+
+   void script_export_callback_double(DoubleCallback cb, const char *nameSpace, const char *funcName, const char* usage,  S32 minArgs, S32 maxArgs)
    {
       if (!nameSpace || !dStrlen(nameSpace))
          Con::addCommand(funcName, cb, usage, minArgs + 1, maxArgs + 1);

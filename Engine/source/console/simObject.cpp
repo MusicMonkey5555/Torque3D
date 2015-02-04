@@ -2231,6 +2231,14 @@ namespace {
                   mPadding[ 3 ] = 0;
                   break;
 
+               case Namespace::Entry::DoubleCallbackType:
+                  mReturnType = "double";
+                  mPadding[ 0 ] = ' ';
+                  mPadding[ 1 ] = ' ';
+                  mPadding[ 2 ] = ' ';
+                  mPadding[ 3 ] = 0;
+                  break;
+
                case Namespace::Entry::VoidCallbackType:
                   mReturnType = "void";
                   mPadding[ 0 ] = ' ';

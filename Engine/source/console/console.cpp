@@ -90,7 +90,7 @@ void ConsoleConstructor::init( const char *cName, const char *fName, const char 
    funcName = fName;
    usage = usg;
    className = cName;
-   sc = 0; fc = 0; vc = 0; bc = 0; ic = 0;
+   sc = 0; fc = 0; dc = 0; vc = 0; bc = 0; ic = 0;
    callback = group = false;
    next = first;
    ns = false;
@@ -113,6 +113,8 @@ void ConsoleConstructor::setup()
          Con::addCommand( walk->className, walk->funcName, walk->ic, walk->usage, walk->mina, walk->maxa, walk->toolOnly, walk->header );
       else if( walk->fc )
          Con::addCommand( walk->className, walk->funcName, walk->fc, walk->usage, walk->mina, walk->maxa, walk->toolOnly, walk->header );
+	  else if( walk->dc )
+         Con::addCommand( walk->className, walk->funcName, walk->dc, walk->usage, walk->mina, walk->maxa, walk->toolOnly, walk->header );
       else if( walk->vc )
          Con::addCommand( walk->className, walk->funcName, walk->vc, walk->usage, walk->mina, walk->maxa, walk->toolOnly, walk->header );
       else if( walk->bc )
@@ -150,6 +152,12 @@ ConsoleConstructor::ConsoleConstructor(const char *className, const char *funcNa
 {
    init( className, funcName, usage, minArgs, maxArgs, isToolOnly, header );
    fc = ffunc;
+}
+
+ConsoleConstructor::ConsoleConstructor(const char *className, const char *funcName, DoubleCallback dfunc, const char *usage, S32 minArgs, S32 maxArgs, bool isToolOnly, ConsoleFunctionHeader* header )
+{
+   init( className, funcName, usage, minArgs, maxArgs, isToolOnly, header );
+   dc = dfunc;
 }
 
 ConsoleConstructor::ConsoleConstructor(const char *className, const char *funcName, VoidCallback vfunc, const char *usage, S32 minArgs, S32 maxArgs, bool isToolOnly, ConsoleFunctionHeader* header )
@@ -1085,6 +1093,12 @@ void addCommand( const char *nsName, const char *name,FloatCallback cb, const ch
    ns->addCommand( StringTable->insert(name), cb, usage, minArgs, maxArgs, isToolOnly, header );
 }
 
+void addCommand( const char *nsName, const char *name,DoubleCallback cb, const char *usage, S32 minArgs, S32 maxArgs, bool isToolOnly, ConsoleFunctionHeader* header )
+{
+   Namespace *ns = lookupNamespace(nsName);
+   ns->addCommand( StringTable->insert(name), cb, usage, minArgs, maxArgs, isToolOnly, header );
+}
+
 void addCommand( const char *nsName, const char *name,BoolCallback cb, const char *usage, S32 minArgs, S32 maxArgs, bool isToolOnly, ConsoleFunctionHeader* header )
 {
    Namespace *ns = lookupNamespace(nsName);
@@ -1129,6 +1143,11 @@ void addCommand( const char *name,IntCallback cb,const char *usage, S32 minArgs,
 }
 
 void addCommand( const char *name,FloatCallback cb,const char *usage, S32 minArgs, S32 maxArgs, bool isToolOnly, ConsoleFunctionHeader* header )
+{
+   Namespace::global()->addCommand( StringTable->insert(name), cb, usage, minArgs, maxArgs, isToolOnly, header );
+}
+
+void addCommand( const char *name,DoubleCallback cb,const char *usage, S32 minArgs, S32 maxArgs, bool isToolOnly, ConsoleFunctionHeader* header )
 {
    Namespace::global()->addCommand( StringTable->insert(name), cb, usage, minArgs, maxArgs, isToolOnly, header );
 }
@@ -1676,12 +1695,22 @@ F32 ConsoleValue::getFloatValue()
       return dAtof(Con::getData(type, dataPtr, 0, enumTable));
 }
 
+F64 ConsoleValue::getDoubleValue()
+{
+   if(type <= TypeInternalString)
+      return dval;
+   else
+      return dAtod(Con::getData(type, dataPtr, 0, enumTable));
+}
+
 const char *ConsoleValue::getStringValue()
 {
    if(type == TypeInternalString || type == TypeInternalStackString)
       return sval;
    if(type == TypeInternalFloat)
       return Con::getData(TypeF32, &fval, 0);
+   else if(type == TypeInternalDouble)
+	   return Con::getData(TypeF64, &dval, 0);
    else if(type == TypeInternalInt)
       return Con::getData(TypeS32, &ival, 0);
    else
@@ -1694,6 +1723,8 @@ bool ConsoleValue::getBoolValue()
       return dAtob(sval);
    if(type == TypeInternalFloat)
       return fval > 0;
+   else if(type == TypeInternalDouble)
+	   return dval > 0;
    else if(type == TypeInternalInt)
       return ival > 0;
    else {
@@ -1712,6 +1743,7 @@ void ConsoleValue::setIntValue(U32 val)
    if(type <= TypeInternalString)
    {
       fval = (F32)val;
+	  dval = (F64)val;
       ival = val;
       if(sval != typeValueEmpty)
       {
@@ -1737,6 +1769,7 @@ void ConsoleValue::setFloatValue(F32 val)
    if(type <= TypeInternalString)
    {
       fval = val;
+	  dval = static_cast<F64>(val);
       ival = static_cast<U32>(val);
       if(sval != typeValueEmpty)
       {
@@ -1752,6 +1785,26 @@ void ConsoleValue::setFloatValue(F32 val)
    }
 }
 
+void ConsoleValue::setDoubleValue(F64 val)
+{
+   if(type <= TypeInternalString)
+   {
+      dval = val;
+      fval = static_cast<F32>(val);
+      ival = static_cast<U32>(val);
+      if(sval != typeValueEmpty)
+      {
+         if (type != TypeInternalStackString) dFree(sval);
+         sval = typeValueEmpty;
+      }
+      type = TypeInternalDouble;
+   }
+   else
+   {
+      const char *dptr = Con::getData(TypeF64, &val, 0);
+      Con::setData(type, dataPtr, 0, 1, &dptr, enumTable);
+   }
+}
 
 const char *ConsoleValueRef::getStringArgValue()
 {

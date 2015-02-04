@@ -90,6 +90,7 @@ class Namespace
             StringCallbackType,
             IntCallbackType,
             FloatCallbackType,
+			DoubleCallbackType,
             VoidCallbackType,
             BoolCallbackType
          };
@@ -140,6 +141,7 @@ class Namespace
             IntCallback mIntCallbackFunc;
             VoidCallback mVoidCallbackFunc;
             FloatCallback mFloatCallbackFunc;
+			DoubleCallback mDoubleCallbackFunc;
             BoolCallback mBoolCallbackFunc;
             const char *mGroupName;
             const char *mCallbackName;
@@ -182,6 +184,7 @@ class Namespace
       void addCommand( StringTableEntry name, StringCallback, const char *usage, S32 minArgs, S32 maxArgs, bool toolOnly = false, ConsoleFunctionHeader* header = NULL );
       void addCommand( StringTableEntry name, IntCallback, const char *usage, S32 minArgs, S32 maxArgs, bool toolOnly = false, ConsoleFunctionHeader* header = NULL );
       void addCommand( StringTableEntry name, FloatCallback, const char *usage, S32 minArgs, S32 maxArgs, bool toolOnly = false, ConsoleFunctionHeader* header = NULL );
+	  void addCommand( StringTableEntry name, DoubleCallback, const char *usage, S32 minArgs, S32 maxArgs, bool toolOnly = false, ConsoleFunctionHeader* header = NULL );
       void addCommand( StringTableEntry name, VoidCallback, const char *usage, S32 minArgs, S32 maxArgs, bool toolOnly = false, ConsoleFunctionHeader* header = NULL );
       void addCommand( StringTableEntry name, BoolCallback, const char *usage, S32 minArgs, S32 maxArgs, bool toolOnly = false, ConsoleFunctionHeader* header = NULL );
 
@@ -331,6 +334,11 @@ public:
       {
          return value.getFloatValue();
       }
+	  
+	  inline F64 getDoubleValue()
+      {
+         return value.getDoubleValue();
+      }
 
       inline const char *getStringValue()
       {
@@ -361,6 +369,21 @@ public:
          }
          
          value.setFloatValue(val);
+
+         // Fire off the notification if we have one.
+         if ( notify )
+            notify->trigger();
+      }
+	  
+	  void setDoubleValue(F64 val)
+      {
+         if( mIsConstant )
+         {
+            Con::errorf( "Cannot assign value to constant '%s'.", name );
+            return;
+         }
+         
+         value.setDoubleValue(val);
 
          // Fire off the notification if we have one.
          if ( notify )
@@ -422,6 +445,7 @@ public:
    const char *getVariable(StringTableEntry name, bool *valid = NULL);
    S32 getIntVariable(StringTableEntry name, bool *valid = NULL);
    F32 getFloatVariable(StringTableEntry name, bool *entValid = NULL);
+   F64 getDoubleVariable(StringTableEntry name, bool *entValid = NULL);
 
    U32 getCount() const
    {
@@ -494,6 +518,7 @@ public:
    const char *getStringVariable();
    void setIntVariable(S32 val);
    void setFloatVariable(F64 val);
+   void setDoubleVariable(F64 val);
    void setStringVariable(const char *str);
    void setCopyVariable();
 

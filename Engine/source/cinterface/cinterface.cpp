@@ -284,6 +284,18 @@ extern "C" {
 		return entry->cb.mFloatCallbackFunc(NULL, args.count(), args);
 	}
 
+	F64 torque_callDoublefunction(const char* nameSpace, const char* name, S32 argc, const char ** argv)
+	{
+
+		Namespace::Entry* entry = GetEntry(nameSpace, name);
+
+		if (!entry)
+			return 0.0;
+
+		StringStackConsoleWrapper args(argc, argv);
+		return entry->cb.mDoubleCallbackFunc(NULL, args.count(), args);
+	}
+
 	S32 torque_callintfunction(const char* nameSpace, const char* name, S32 argc, const char ** argv)
 	{
 
@@ -387,6 +399,10 @@ extern "C" {
 
 					case Namespace::Entry::FloatCallbackType:
 						dSprintf(returnBuffer, sizeof(returnBuffer), "%g", torque_callfloatfunction(nameSpace, name, argc, argv));
+						return returnBuffer;
+
+					case Namespace::Entry::DoubleCallbackType:
+						dSprintf(returnBuffer, sizeof(returnBuffer), "%lg", torque_callDoublefunction(nameSpace, name, argc, argv));
 						return returnBuffer;
 
 					case Namespace::Entry::VoidCallbackType:

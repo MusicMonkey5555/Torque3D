@@ -280,6 +280,12 @@ inline void ExprEvalState::setFloatVariable(F64 val)
    currentVariable->setFloatValue(val);
 }
 
+inline void ExprEvalState::setDoubleVariable(F64 val)
+{
+   AssertFatal(currentVariable != NULL, "Invalid evaluator state - trying to set null variable!");
+   currentVariable->setDoubleValue(val);
+}
+
 inline void ExprEvalState::setStringVariable(const char *val)
 {
    AssertFatal(currentVariable != NULL, "Invalid evaluator state - trying to set null variable!");
@@ -495,6 +501,8 @@ ConsoleValueRef CodeBlock::exec(U32 ip, const char *functionName, Namespace *thi
             gEvalState.setIntVariable(argv[i+1]);
          else if (argv[i+1].isFloat())
             gEvalState.setFloatVariable(argv[i+1]);
+		 else if (argv[i+1].isDouble())
+            gEvalState.setDoubleVariable(argv[i+1]);
          else
             gEvalState.setStringVariable(argv[i+1]);
       }
@@ -1931,6 +1939,29 @@ breakContinue:
                            STR.setFloatValue(result);
                         break;
                      }
+					 case Namespace::Entry::DoubleCallbackType:
+                     {
+                        F64 result = nsEntry->cb.mDoubleCallbackFunc(gEvalState.thisObject, callArgc, callArgv);
+                        STR.popFrame();
+                        CSTK.popFrame();
+                        if(code[ip] == OP_STR_TO_UINT)
+                        {
+                           ip++;
+                           intStack[++_UINT] = (S64)result;
+                           break;
+                        }
+                        else if(code[ip] == OP_STR_TO_FLT)
+                        {
+                           ip++;
+                           floatStack[++_FLT] = result;
+                           break;
+                        }
+                        else if(code[ip] == OP_STR_TO_NONE)
+                           ip++;
+                        else
+                           STR.setDoubleValue(result);
+                        break;
+                     } 
                      case Namespace::Entry::VoidCallbackType:
                         nsEntry->cb.mVoidCallbackFunc(gEvalState.thisObject, callArgc, callArgv);
                         if( code[ ip ] != OP_STR_TO_NONE && Con::getBoolVariable( "$Con::warnVoidAssignment", true ) )

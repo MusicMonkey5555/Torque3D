@@ -175,6 +175,9 @@ void Dictionary::exportVariables(const char *varString, const char *fileName, bo
          case ConsoleValue::TypeInternalFloat:
             dSprintf(buffer, sizeof(buffer), "%s = %g;%s", (*s)->name, (*s)->value.fval, cat);
             break;
+		 case ConsoleValue::TypeInternalDouble:
+            dSprintf(buffer, sizeof(buffer), "%s = %lg;%s", (*s)->name, (*s)->value.dval, cat);
+            break;
          default:
             expandEscape(expandBuffer, (*s)->getStringValue());
             dSprintf(buffer, sizeof(buffer), "%s = \"%s\";%s", (*s)->name, expandBuffer, cat);
@@ -234,6 +237,9 @@ void Dictionary::exportVariables( const char *varString, Vector<String> *names, 
             break;
          case ConsoleValue::TypeInternalFloat:
             values->push_back( String::ToString( (*s)->value.fval ) );         
+            break;
+		 case ConsoleValue::TypeInternalDouble:
+            values->push_back( String::ToString( (*s)->value.dval ) );         
             break;
          default:         
             expandEscape( expandBuffer, (*s)->getStringValue() );
@@ -516,6 +522,7 @@ void ConsoleValue::setStringValue(const char * value)
             sval = typeValueEmpty;
             bufferLen = 0;
             fval = 0.f;
+			dval = 0.0;
             ival = 0;
             type = TypeInternalString;
             return;
@@ -530,11 +537,13 @@ void ConsoleValue::setStringValue(const char * value)
       if(stringLen < 256)
       {
          fval = dAtof(value);
+		 dval = dAtod(value);
          ival = dAtoi(value);
       }
       else
       {
          fval = 0.f;
+		 dval = 0.0;
          ival = 0;
       }
 
@@ -568,6 +577,7 @@ void ConsoleValue::setStackStringValue(const char * value)
          sval = typeValueEmpty;
          bufferLen = 0;
          fval = 0.f;
+		 dval = 0.0;
          ival = 0;
          type = TypeInternalString;
          return;
@@ -577,11 +587,13 @@ void ConsoleValue::setStackStringValue(const char * value)
       if(stringLen < 256)
       {
          fval = dAtof(value);
+		 dval = dAtod(value);
          ival = dAtoi(value);
       }
       else
       {
          fval = 0.f;
+		 dval = 0.0;
          ival = 0;
       }
 
@@ -618,6 +630,22 @@ F32 Dictionary::getFloatVariable(StringTableEntry name, bool *entValid)
       if(entValid)
          *entValid = true;
       return ent->getFloatValue();
+   }
+
+   if(entValid)
+      *entValid = false;
+
+   return 0;
+}
+
+F64 Dictionary::getDoubleVariable(StringTableEntry name, bool *entValid)
+{
+   Entry *ent = lookup(name);
+   if(ent)
+   {
+      if(entValid)
+         *entValid = true;
+      return ent->getDoubleValue();
    }
 
    if(entValid)
@@ -1276,6 +1304,21 @@ void Namespace::addCommand( StringTableEntry name, FloatCallback cb, const char 
    ent->cb.mFloatCallbackFunc = cb;
 }
 
+void Namespace::addCommand( StringTableEntry name, DoubleCallback cb, const char *usage, S32 minArgs, S32 maxArgs, bool isToolOnly, ConsoleFunctionHeader* header )
+{
+   Entry *ent = createLocalEntry(name);
+   trashCache();
+
+   ent->mUsage = usage;
+   ent->mHeader = header;
+   ent->mMinArgs = minArgs;
+   ent->mMaxArgs = maxArgs;
+   ent->mToolOnly = isToolOnly;
+
+   ent->mType = Entry::DoubleCallbackType;
+   ent->cb.mDoubleCallbackFunc = cb;
+}
+
 void Namespace::addCommand( StringTableEntry name, BoolCallback cb, const char *usage, S32 minArgs, S32 maxArgs, bool isToolOnly, ConsoleFunctionHeader* header )
 {
    Entry *ent = createLocalEntry(name);
@@ -1377,6 +1420,10 @@ const char *Namespace::Entry::execute(S32 argc, ConsoleValueRef *argv, ExprEvalS
       case FloatCallbackType:
          dSprintf(returnBuffer, sizeof(returnBuffer), "%g",
             cb.mFloatCallbackFunc(state->thisObject, argc, argv));
+         return returnBuffer;
+	  case DoubleCallbackType:
+         dSprintf(returnBuffer, sizeof(returnBuffer), "%lg",
+            cb.mDoubleCallbackFunc(state->thisObject, argc, argv));
          return returnBuffer;
       case VoidCallbackType:
          cb.mVoidCallbackFunc(state->thisObject, argc, argv);
@@ -1714,6 +1761,10 @@ String Namespace::Entry::getPrototypeString() const
 
          case FloatCallbackType:
             str.append( "float " );
+            break;
+
+		 case DoubleCallbackType:
+            str.append( "double " );
             break;
 
          case VoidCallbackType:

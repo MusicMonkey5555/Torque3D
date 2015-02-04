@@ -124,6 +124,14 @@ struct StringStack
       mLen = dStrlen(mBuffer + mStart);
    }
 
+   /// Set the top of the stack to be a float value.
+   void setDoubleValue(F64 v)
+   {
+      validateBufferSize(mStart + 32);
+      dSprintf(mBuffer + mStart, 32, "%lg", v);
+      mLen = dStrlen(mBuffer + mStart);
+   }
+
    /// Return a temporary buffer we can use to return data.
    char* getReturnBuffer(U32 size)
    {

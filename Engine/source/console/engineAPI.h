@@ -1297,6 +1297,10 @@ inline F32 _EngineConsoleThunkReturnValue( F32 value )
 {
    return value;
 }
+inline F64 _EngineConsoleThunkReturnValue( F64 value )
+{
+   return value;
+}
 inline const char* _EngineConsoleThunkReturnValue( const String& str )
 {
    return Con::getReturnBuffer( str );
@@ -1342,6 +1346,12 @@ struct _EngineConsoleThunkType< F32 >
 {
    typedef F32 ReturnType;
    typedef FloatCallback CallbackType;
+};
+template<>
+struct _EngineConsoleThunkType< F64 >
+{
+   typedef F64 ReturnType;
+   typedef DoubleCallback CallbackType;
 };
 template<>
 struct _EngineConsoleThunkType< bool >
