@@ -98,7 +98,9 @@ class GuiColorPickerCtrl : public GuiControl
    bool mMouseDown;		///< Mouse button down?
    bool mActionOnMove;		///< Perform onAction() when position has changed?
 
-	
+   bool mSelectColor;	///< Set the selector based on a color
+   ColorF mSetColor;	///< Color we set the selector to
+   GBitmap* mBitmap;	///< Keep track of the bitmap gradient we are rendering for color lookups	
    
    S32   mSelectorGap;		///< The half-way "gap" between the selector pos and where the selector is allowed to draw. 
 
@@ -107,12 +109,22 @@ class GuiColorPickerCtrl : public GuiControl
    static ColorI mColorRange[7]; ///< Color range for pHorizColorRange and pVertColorRange
    /// @}
 
+   ///Find the position of a color in a bitmap closest to the specified color
+   ///@note this searches every pixel of the bitmap so it could be a little slow
+   ///@param color		Color to look for
+   ///@param offset		Offset into the bitmap to start looking
+   ///@param resolution	Resolution of the bitmap
+   ///@param bmp		Bitmap to search for the color
+   ///@return 2D coordinate of where the color was found in the bitmap or -1 -1 if not found
+   Point2I findColor(const ColorF & color, const Point2I& offset, const Point2I& resolution, GBitmap& bmp);
+
   public:   
    
    DECLARE_CONOBJECT(GuiColorPickerCtrl);
    DECLARE_CATEGORY( "Gui Editor" );
    
    GuiColorPickerCtrl();
+   ~GuiColorPickerCtrl();
 
    static void initPersistFields();
    void onRender(Point2I offset, const RectI &updateRect);
@@ -131,6 +143,11 @@ class GuiColorPickerCtrl : public GuiControl
    /// @name Selector Functions
    /// @{
    void setSelectorPos(const Point2I &pos); ///< Set new pos (in local coords)
+
+   ///Set the selector position based on a color
+   ///@param color	Select the position closest to the color specified
+   void setSelectorPos(const ColorF & color);
+
    Point2I getSelectorPos() {return mSelectorPos;}
    /// @}
    
